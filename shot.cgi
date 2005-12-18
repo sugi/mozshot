@@ -28,7 +28,7 @@ imgsize and reqargs[:opt][:imgsize] = imgsize
 
 
 DRb.start_service
-ts = DRbibject.new_with_uri("drbunix:drbsock")
+ts = DRbObject.new_with_uri("drbunix:drbsock")
 #ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock")
 
 ts.write [:req, cid, qid, :shot_buf, reqargs], Rinda::SimpleRenewer.new(60)
