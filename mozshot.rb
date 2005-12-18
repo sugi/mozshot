@@ -63,7 +63,7 @@ class MozShot
     screenshot_file(uri, tempfile.path, useropt)
     tempfile.rewind
     buf = tempfile.read
-    tempfile.close
+    tempfile.close(true)
     buf
   end
 
