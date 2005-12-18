@@ -13,13 +13,14 @@ winsize = nil
 imgsize = nil
 
 
-if ! %r{^https?://}.match uri
-  puts "Content-Type: text/plain", "", "security error"
+if uri.nil? || uri.empty? || !%r{^https?://}.match(uri)
+  puts("Content-Type: text/plain", "", "Invalid Request")
+  exit
 end
 
 if %r[^/(?:(\d+)x(\d+))?(?:-(\d+)?x(\d+)?)?].match cgi.path_info
   $1 && $2 and winsize = [$1.to_i, $2.to_i]
-  $3 && $4 and imgsize = [$3.to_i, $4.to_i]
+  $3 || $4 and imgsize = [($3 ? $3.to_i : $1.to_i), ($4 ? $4.to_i : $2.to_i)]
 end
 
 reqargs = {:uri => uri, :opt => {}}
