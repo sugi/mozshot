@@ -1,0 +1,52 @@
+README
+------
+
+MozShot - Web site thumbnail service by gtkmozembed.
+
+Copyright (C) 2005 Tatsuki Sugiura
+Released in the Ruby License
+
+This was based on MozSnapshooter written by Mirko Maischberger.
+  http://mirko.lilik.it/Ruby-GNOME2/moz-snapshooter.rb
+
+Origianl idea by Andrew McCall - <andrew@textux.com>
+  http://www.hackdiary.com/archives/000055.html
+
+And I refered many similar implementation. Thanks for all!
+
+
+How to use
+------
+
+Simple snapshot.
+
+   mozshot http://www.google.com/ shot.png
+
+
+Daemon mode.
+
+  # run TupleSpace daemon
+  ./ts.rb
+  # run snapshot daemon
+  ./mozshot -d
+  # run client
+  ./client.rb http://foo.bar
+
+
+Tips
+------
+
+* To supress scrollbar
+
+  Add "body { overflow: hidden !important }" to
+  ~/.mozilla/mozshot/default/chrome/userContent.css.
+
+* To change default language 
+
+  Add setting to ~/.mozilla/mozshot/default/user.js.
+  Japanese example followed;
+
+     user_pref("intl.accept_languages", "ja, en-us, en");
+     user_pref("intl.charset.default", "Shift_JIS");
+     user_pref("intl.charset.detector", "ja_parallel_state_machine");
+

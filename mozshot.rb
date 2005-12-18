@@ -140,7 +140,8 @@ if __FILE__ == $0
     require 'drb'
     require 'rinda/rinda'
     DRb.start_service
-    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(ARGV[1]))
+    drburi = ARGV[1] || "#{ENV['HOME']}/.mozilla/mozshot/default/drbsock"
+    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi)
     loop {
       STDERR.puts "taking..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
