@@ -23,8 +23,8 @@ class MozShot
   class InternalError < StandardError; end
   def initialize(useropt = {})
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
-             :winsize => [800, 800], :imgsize => nil, :timeout => 30,
-             :imgformat => "png", :keepratio => true }
+             :winsize => [800, 800], :imgsize => [200, 200],
+	     :timeout => 30, :imgformat => "png", :keepratio => true }
     @opt.merge! useropt
     @window = nil
     @moz    = nil
@@ -44,6 +44,7 @@ class MozShot
       topt = opt.dup.merge! useropt
       w = Gtk::Window.new
       w.title = "MozShot"
+      w.decorated = false
       w.border_width = 0
       w.resize(topt[:winsize][0], topt[:winsize][1])
       m = Gtk::MozEmbed.new
@@ -97,7 +98,7 @@ class MozShot
         return nil
       end
 
-      if shotopt[:imgsize]
+      if shotopt[:imgsize] && shotopt[:imgsize] != shotopt[:winsize]
         width, height = *shotopt[:imgsize]
         if shotopt[:keepratio]
           ratio = shotopt[:winsize][0].to_f / shotopt[:winsize][1]
@@ -107,7 +108,6 @@ class MozShot
             height = width / ratio
           end
         end
-        
         pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
       end
       pixbuf.save(filename, opt[:imgformat])
