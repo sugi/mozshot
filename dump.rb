@@ -3,7 +3,7 @@
 require 'drb'
 require 'pp'
 
-DRb.start_service('drbnull:')
+#DRb.start_service('drbunix:')
 ts = DRbObject.new_with_uri(ARGV[0])
 
 loop {

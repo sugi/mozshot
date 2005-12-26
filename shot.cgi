@@ -28,7 +28,7 @@ winsize and reqargs[:opt][:winsize] = winsize
 imgsize and reqargs[:opt][:imgsize] = imgsize
 
 
-DRb.start_service('drbnull:')
+DRb.start_service('drbunix:')
 ts = DRbObject.new_with_uri("drbunix:drbsock")
 #ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock")
 
