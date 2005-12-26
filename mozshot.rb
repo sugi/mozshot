@@ -139,7 +139,7 @@ if __FILE__ == $0
   elsif ARGV[0] == "-d"
     require 'drb'
     require 'rinda/rinda'
-    DRb.start_service
+    DRb.start_service('drbnull:')
     drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     loop {
