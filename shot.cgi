@@ -5,6 +5,8 @@ require 'cgi'
 require 'drb'
 require 'rinda/rinda'
 
+cache_dir = 'cache'
+cache_expire = 300
 cid = $$
 qid = ENV["UNIQUE_ID"] || $$+rand
 cgi = CGI.new
@@ -35,6 +37,19 @@ reqargs = {:uri => uri, :opt => {}}
 winsize.empty? or reqargs[:opt][:winsize] = winsize
 imgsize.empty? or reqargs[:opt][:imgsize] = imgsize
 
+cache_hash = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")
+cache_path = "#{cache_dir}/#{cache_hash}"
+
+begin
+  if File.mtime(cache_path).to_i + 300 > Time.now.to_i
+    open(cache_path) { |c|
+      puts "Content-Type: image/png", "", c.read
+      exit
+  end
+rescue Errno::ENOENT
+  # ignore
+end
+
 DRb.start_service('drbunix:')
 ts = DRbObject.new_with_uri("drbunix:drbsock")
 #ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock")
@@ -46,6 +61,10 @@ ret = ts.take [:ret, cid, qid, nil, nil]
 if ret[3] == :success
   puts "Content-Type: image/png", ""
   print ret[4]
+
+  open(cache_path, "w") {|f|
+    f << ret[4]
+  }
 else
   puts "Content-Type: text/plain", "", "InternalError:"
   require 'pp'
