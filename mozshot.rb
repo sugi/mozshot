@@ -45,6 +45,7 @@ class MozShot
       w = Gtk::Window.new
       w.title = "MozShot"
       w.decorated = false
+      w.has_frame = false
       w.border_width = 0
       w.resize(topt[:winsize][0], topt[:winsize][1])
       m = Gtk::MozEmbed.new
@@ -56,6 +57,7 @@ class MozShot
       @moz    = m
     }
     @window.show_all
+    @window.move(0,0)
   end
 
   def screenshot(uri, useropt = {})
@@ -102,9 +104,9 @@ class MozShot
         width, height = *shotopt[:imgsize]
         if shotopt[:keepratio]
           ratio = shotopt[:winsize][0].to_f / shotopt[:winsize][1]
-          if height * ratio < width
+          if width.to_i.zero? || !height.to_i.zero? && height * ratio < width
             width  = height * ratio
-          elsif width / ratio < height
+          elsif height.to_i.zero? || !width.to_i.zero? && width / ratio < height
             height = width / ratio
           end
         end
