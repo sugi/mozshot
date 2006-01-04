@@ -41,12 +41,14 @@ cache_hash = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")
 cache_path = "#{cache_dir}/#{cache_hash}"
 
 begin
-  if File.mtime(cache_path).to_i + 300 > Time.now.to_i
+  if File.size(cache_path) != 0 &&
+      File.mtime(cache_path).to_i + 300 > Time.now.to_i
     open(cache_path) { |c|
       puts "Content-Type: image/png", "", c.read
-      exit
+    }
+    exit
   end
-rescue Errno::ENOENT
+rescue Errno::ENOENT, Errno::EPERM
   # ignore
 end
 
