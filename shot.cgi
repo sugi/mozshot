@@ -4,6 +4,7 @@
 require 'cgi'
 require 'drb'
 require 'rinda/rinda'
+require 'digest/md5'
 
 cache_dir = 'cache'
 cache_expire = 300
