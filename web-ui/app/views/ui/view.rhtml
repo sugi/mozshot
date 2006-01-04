@@ -1,6 +1,3 @@
-<html>
-  <body>
-    <!-- <%= start_form_tag :action => 'view' %> -->
     <%= start_form_tag %>
       URI: <%= text_field_tag 'uri', params[:uri], :size => 80 %> <br />
       Window Size:
@@ -12,6 +9,4 @@
       <%= submit_tag 'Shot' %>
     <%= end_form_tag %>
     <%= "http://sugi.nemui.org/mozshot/shot?#{@reqstr}" %>
-    <%= image_tag "http://sugi.nemui.org/mozshot/shot?#{@reqstr}", :alt => "" %>
-  </body>
-</html>
+    <%= @reqstr ? image_tag("http://sugi.nemui.org/mozshot/shot?#{@reqstr}", :alt => "") : "" %>
