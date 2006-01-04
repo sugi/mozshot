@@ -8,3 +8,15 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 
 require 'tasks/rails'
+
+require 'gettext/utils'
+
+desc "Update pot/po files."
+task :updatepo do
+  GetText.update_pofiles("blog", Dir.glob("{lib,bin}/**/*.{rb,rhtml}"), "blog 1.0.0")
+end
+
+desc "Create mo-files"
+task :makemo do
+  GetText.create_mofiles(true, "po", "locale")
+end

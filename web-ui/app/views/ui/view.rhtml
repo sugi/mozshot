@@ -1,12 +1,16 @@
-    <%= start_form_tag %>
+<%= render_partial "header" %>
+  <%= start_form_tag %>
+    <div class="mozshotui">      
       URI: <%= text_field_tag 'uri', params[:uri], :size => 80 %> <br />
       Window Size:
-      <%= text_field_tag 'win_x', params[:win_x], :size => 5 %>x
+      <%= text_field_tag 'win_x', params[:win_x], :size => 5 %> x
       <%= text_field_tag 'win_y', params[:win_y], :size => 5 %> <br />
       Image Size:
-      <%= text_field_tag 'img_x', params[:img_x], :size => 5 %>x
+      <%= text_field_tag 'img_x', params[:img_x], :size => 5 %> x
       <%= text_field_tag 'img_y', params[:img_y], :size => 5 %> <br />
-      <%= submit_tag 'Shot' %>
-    <%= end_form_tag %>
-    <%= "http://sugi.nemui.org/mozshot/shot?#{@reqstr}" %>
-    <%= @reqstr ? image_tag("http://sugi.nemui.org/mozshot/shot?#{@reqstr}", :alt => "") : "" %>
+      <%= submit_tag 'Shot!' %>
+    </div>
+  <%= end_form_tag %>
+  <%= "http://sugi.nemui.org/mozshot/shot?#{@reqstr}" %>
+  <%= (@reqstr && !@reqstr.empty?) ? image_tag("http://sugi.nemui.org/mozshot/shot?#{@reqstr}", :alt => "") : "" %>
+<%= render_partial "footer" %>

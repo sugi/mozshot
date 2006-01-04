@@ -1,4 +1,7 @@
+require 'gettext/rails'
+
 class UiController < ApplicationController
+  init_gettext "mozshot"
 
   def view
     if params[:commit]
@@ -10,8 +13,8 @@ class UiController < ApplicationController
           :win_y => params[:win_y],
           :img_x => params[:img_x],
           :img_y => params[:img_y]
-        }.map {|i|
-          i[1].empty? ? nil : "#{i[0]}=#{CGI.escape(i[1])}"
+        }.map {|k, v|
+          v.empty? ? nil : "#{k}=#{CGI.escape(v)}"
         }.compact.join(';')
     end
   end

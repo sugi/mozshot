@@ -23,7 +23,7 @@ class MozShot
   class InternalError < StandardError; end
   def initialize(useropt = {})
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
-             :winsize => [800, 800], :imgsize => [200, 200],
+             :winsize => [800, 800], :imgsize => [],
 	     :timeout => 30, :imgformat => "png", :keepratio => true }
     @opt.merge! useropt
     @window = nil
@@ -100,7 +100,8 @@ class MozShot
         return nil
       end
 
-      if shotopt[:imgsize] && shotopt[:imgsize] != shotopt[:winsize]
+      if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
+	   shotopt[:imgsize] != shotopt[:winsize]
         width, height = *shotopt[:imgsize]
         if shotopt[:keepratio]
           ratio = shotopt[:winsize][0].to_f / shotopt[:winsize][1]
