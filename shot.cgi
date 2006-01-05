@@ -32,7 +32,7 @@ else
   end
 end
 
-if uri.nil? || uri.empty? || !%r{^https?://}.match(uri)
+if uri.nil? || uri.empty? || !%r{^(https?|ftp|about)://}.match(uri)
   puts("Content-Type: text/plain", "", "Invalid Request")
   exit
 end
