@@ -17,5 +17,5 @@ ARGV.each_with_index {|uri, i|
     puts "done. screenshot was saved in #{ret[4]}"
   else
     puts "fail! #{ret[4]}"
-  done
+  end
 }
