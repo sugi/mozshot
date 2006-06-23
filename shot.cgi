@@ -12,8 +12,8 @@ cid = $$
 qid = ENV["UNIQUE_ID"] || $$+rand
 cgi = CGI.new
 uri = nil
-winsize = [800, 600]
-imgsize = [200, 150]
+winsize = [1000, 1000]
+imgsize = [128, 128]
 keepratio = true
 
 if !cgi['uri'].empty?
@@ -26,7 +26,12 @@ if !cgi['uri'].empty?
   keepratio = cgi.params['keepraito'][0] == "true" ? true : false
 else
   uri = cgi.query_string
-  if %r[^/(?:(\d+)x(\d+))?(?:-(\d+)?x(\d+)?)?].match cgi.path_info
+  case cgi.path_info
+  when %r[^/large/]
+    imgsize = [256, 256]
+  when %r[^/small/]
+    imgsize = [64, 64]
+  when %r[^/(?:(\d+)x(\d+))?(?:-(\d+)?x(\d+)?)?]
     $1 && $2 and winsize = [$1.to_i, $2.to_i]
     $3 || $4 and imgsize = [($3 ? $3.to_i : $1.to_i), ($4 ? $4.to_i : $2.to_i)]
   end
@@ -46,7 +51,7 @@ cache_hash = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")
 cache_path = "#{cache_dir}/#{cache_hash}"
 
 begin
-  if File.size(cache_path) != 0 &&
+  if cgi['nocache'][0] != 'true' || File.size(cache_path) != 0 &&
       File.mtime(cache_path).to_i + cache_expire > Time.now.to_i
     open(cache_path) { |c|
       puts "Content-Type: image/png", "", c.read
