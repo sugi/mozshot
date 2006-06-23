@@ -22,6 +22,9 @@ require 'tempfile'
 class MozShot
   class InternalError < StandardError; end
   def initialize(useropt = {})
+    if ENV['MOZILLA_FIVE_HOME']
+       Gtk::MozEmbed.set_comp_path(ENV['MOZILLA_FIVE_HOME'])
+    end
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
              :winsize => [1000, 1000], :imgsize => [],
 	     :timeout => 30, :imgformat => "png", :keepratio => true }
