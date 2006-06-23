@@ -114,7 +114,7 @@ class MozShot
             height = width / ratio
           end
         end
-        pixbuf.scale!(width, height, Gdk::Pixbuf::INTERP_HYPER)
+        pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
       end
       pixbuf.save(filename, opt[:imgformat])
       filename
@@ -160,6 +160,9 @@ if __FILE__ == $0
         elsif req[3] == :shot_file
           ts.write [:ret, req[1], req[2], :success,
 		    ms.screenshot_file(req[4][:uri], req[4][:filename], req[4][:opt]||{})], 300
+        elsif req[3] == :shutdown
+          ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
+	  exit!
         else
           raise "Unknown request"
         end
