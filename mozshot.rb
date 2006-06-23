@@ -26,7 +26,7 @@ class MozShot
        Gtk::MozEmbed.set_comp_path(ENV['MOZILLA_FIVE_HOME'])
     end
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
-             :winsize => [1000, 1000], :imgsize => [],
+             :winsize => [800, 800], :imgsize => [],
 	     :timeout => 30, :imgformat => "png", :keepratio => true }
     @opt.merge! useropt
     @window = nil
@@ -46,10 +46,10 @@ class MozShot
     @mutex[:mozwin].synchronize {
       topt = opt.dup.merge! useropt
       w = Gtk::Window.new
-      w.title = "MozShot"
-      #w.decorated = false
-      #w.has_frame = false
-      #w.border_width = 0
+      #w.title = "MozShot"
+      w.decorated = false
+      w.has_frame = false
+      w.border_width = 0
       w.resize(topt[:winsize][0], topt[:winsize][1])
       m = Gtk::MozEmbed.new
       m.chrome_mask = Gtk::MozEmbed::ALLCHROME
