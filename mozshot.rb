@@ -23,7 +23,7 @@ class MozShot
   class InternalError < StandardError; end
   def initialize(useropt = {})
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
-             :winsize => [800, 800], :imgsize => [],
+             :winsize => [1000, 1000], :imgsize => [],
 	     :timeout => 30, :imgformat => "png", :keepratio => true }
     @opt.merge! useropt
     @window = nil
@@ -44,9 +44,9 @@ class MozShot
       topt = opt.dup.merge! useropt
       w = Gtk::Window.new
       w.title = "MozShot"
-      w.decorated = false
-      w.has_frame = false
-      w.border_width = 0
+      #w.decorated = false
+      #w.has_frame = false
+      #w.border_width = 0
       w.resize(topt[:winsize][0], topt[:winsize][1])
       m = Gtk::MozEmbed.new
       m.chrome_mask = Gtk::MozEmbed::ALLCHROME
@@ -111,7 +111,7 @@ class MozShot
             height = width / ratio
           end
         end
-        pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
+        pixbuf.scale!(width, height, Gdk::Pixbuf::INTERP_HYPER)
       end
       pixbuf.save(filename, opt[:imgformat])
       filename
@@ -146,9 +146,9 @@ if __FILE__ == $0
     drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     loop {
-      STDERR.puts "taking..."
+      STDERR.puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
-      STDERR.puts "took request ..."
+      STDERR.print "took request: "
       p req
       begin
         if req[3] == :shot_buf
