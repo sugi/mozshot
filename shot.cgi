@@ -5,6 +5,7 @@ require 'cgi'
 require 'drb'
 require 'rinda/rinda'
 require 'digest/md5'
+require 'time'
 
 cache_dir = 'cache'
 cache_expire = 300
@@ -54,7 +55,10 @@ begin
   if cgi.params['nocache'][0] != 'true' && File.size(cache_path) != 0 &&
       File.mtime(cache_path).to_i + cache_expire > Time.now.to_i
     open(cache_path) { |c|
-      puts "Content-Type: image/png", ""
+      puts "Content-Type: image/png",
+	   "Last-Modified: #{File.mtime(cache_path).httpdate}",
+	   ""
+      print c.read
     }
     exit
   elsif cgi.params['nocache'][0] != 'true'
@@ -78,7 +82,10 @@ ret = []
 }
 
 if ret[3] == :success
-  puts "Content-Type: image/png", ""
+  mtime = Time.now
+  puts "Content-Type: image/png",
+       "Last-Modified: #{mtime.httpdate}",
+       ""
   image = ret[4]
 
   require 'RMagick'
@@ -94,6 +101,7 @@ if ret[3] == :success
   open(cache_path, "w") {|f|
     f << image
   }
+  File.uptime(Time.now, mtime, cache_path)
 else
   puts "Content-Type: text/plain", "", "InternalError:"
   require 'pp'
