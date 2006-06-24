@@ -7,7 +7,6 @@ require 'rinda/rinda'
 require 'digest/md5'
 
 cache_dir = 'cache'
-cache_dir = 'nocache'
 cache_expire = 300
 cid = $$
 qid = ENV["UNIQUE_ID"] || $$+rand
