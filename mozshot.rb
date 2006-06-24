@@ -2,8 +2,9 @@
 # 
 # MozShot - Web site thumbnail service by gtkmozembed.
 #
-# Copyright (C) 2005 Tatsuki Sugiura
-# Released in the Ruby License
+# Copyright (C) 2005 Tatsuki Sugiura <sugi@nemui.org>
+# Released under the Ruby License.
+#
 # 
 # This was based on MozSnapshooter written by Mirko Maischberger.
 #   http://mirko.lilik.it/Ruby-GNOME2/moz-snapshooter.rb
@@ -11,13 +12,12 @@
 # Origianl idea by Andrew McCall - <andrew@textux.com>
 #   http://www.hackdiary.com/archives/000055.html
 #
-# And I refered many similar implementation. Thanks for all!
+# And I refered many similar implementations. Thanks for all!
 # 
 
 require 'gtkmozembed'
 require 'thread'
 require 'timeout'
-require 'tempfile'
 
 class MozShot
   class InternalError < StandardError; end
