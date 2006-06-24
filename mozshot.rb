@@ -63,36 +63,37 @@ class MozShot
     @window.move(0,0)
   end
 
-  def screenshot(uri, useropt = {})
-    tempfile = Tempfile.new("mozshot")
-    screenshot_file(uri, tempfile.path, useropt)
-    tempfile.rewind
-    buf = tempfile.read
-    tempfile.close(true)
-    buf
+  def screenshot_file(uri, filename, useropt = {})
+    File.open(filename, "w") {|f|
+      f << screenshot(uri, useropt)
+    }
+    filename
   end
 
-  def screenshot_file(url, filename, useropt = {})
+  def screenshot(url, useropt = {})
     shotopt = opt.dup.merge! useropt
     q = Queue.new
     @mutex[:shot].synchronize {
       renew_mozwin(shotopt)
-      gdkw = @window.child.parent_window
       @moz.signal_connect("net_stop") {
         begin
           Gtk::timeout_add(100) {
-            q.push getpixbuf(gdkw, shotopt)
+            q.push :loaded
             false
           }
         rescue => e
           puts e.class, e.message, e.backtrace
         end
       }
+
       @moz.location = url
       pixbuf = nil
 
       begin
-        timeout(opt[:timeout]){ pixbuf = q.pop }
+        timeout(opt[:timeout]){
+          q.pop
+          pixbuf = getpixbuf(@window.child.parent_window, shotopt)
+        }
       rescue Timeout::Error
         # TODO
         Gtk::Window.toplevels.each { |w|
@@ -116,8 +117,7 @@ class MozShot
         end
         pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
       end
-      pixbuf.save(filename, opt[:imgformat])
-      filename
+      pixbuf.save_to_buffer(opt[:imgformat])
     }
   end
 
@@ -128,6 +128,7 @@ class MozShot
 
   def cleanup
     @moz and @moz.location = "about:blank"
+    #GC.start
   end
 
   def shutdown
@@ -148,10 +149,12 @@ if __FILE__ == $0
     DRb.start_service('drbunix:')
     drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
+    ms.renew_mozwin
+    i = 0
     loop {
-      STDERR.puts "waiting for request..."
+      puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
-      STDERR.print "took request: "
+      print "took request: "
       p req
       begin
         if req[3] == :shot_buf
@@ -159,17 +162,29 @@ if __FILE__ == $0
 		    ms.screenshot(req[4][:uri], req[4][:opt]||{})], 300
         elsif req[3] == :shot_file
           ts.write [:ret, req[1], req[2], :success,
-		    ms.screenshot_file(req[4][:uri], req[4][:filename], req[4][:opt]||{})], 300
+		    ms.screenshot_file(req[4][:uri], req[4][:filename],
+                                       req[4][:opt]||{})], 300
         elsif req[3] == :shutdown
           ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
-	  exit!
+          puts "shutdown request was accepted, going shutdown."
+          break
         else
           raise "Unknown request"
         end
+      rescue InternalError => e
+        ts.write [:ret, req[1], req[2], :error, e.message]
+        raise e
       rescue => e
         ts.write [:ret, req[1], req[2], :error, e.message]
       end
       ms.cleanup
+
+      # I cannot use inifinite loop until solving mem leak problem...
+      i += 1
+      if i > 60
+        puts "max times exeeded, going shutdown"
+        break
+      end
     }
   else
     ms.screenshot_file ARGV[0], (ARGV[1]|| "mozshot.png")
