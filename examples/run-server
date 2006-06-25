@@ -1,0 +1,17 @@
+#!/bin/bash
+
+displayno=51
+export DISPLAY=:${displayno}.0
+#export MOZILLA_FIVE_HOME=/usr/lib/firefox
+exprot MOZILLA_FIVE_HOME=/usr/lib/xulrunner
+
+ulimit -c unlimited
+
+Xvfb :$displayno -nolisten tcp -screen 0 2048x2048x16
+if [ -e ~/.mozilla/mozshot/default/drbsock ]; then
+  echo "drb socket already exists"
+  exit 1
+fi
+bash -c 'while :; do ./ts.rb; done'&
+bash -c "while :; do ruby mozshot.rb -d >> mozshot-${displayno}.log 2>&1; sleep 0.3; done"&
+
