@@ -13,7 +13,7 @@ require 'digest/md5'
 require 'time'
 
 cache_dir = 'cache'
-cache_expire = 300
+cache_expire = 1800
 cid = $$
 qid = ENV["UNIQUE_ID"] || $$+rand
 cgi = CGI.new
@@ -83,7 +83,16 @@ begin
   if cgi.params['nocache'][0] != 'true' && cachestat.size != 0 &&
       cachestat.mtime.to_i + cache_expire > Time.now.to_i
     if ENV['HTTP_IF_MODIFIED_SINCE'] &&
-       Time.parse(ENV['HTTP_IF_MODIFIED_SINCE']) <= cachestat.mtime
+       ENV['HTTP_IF_MODIFIED_SINCE'] =~ /; length=0/
+      # browser have broken cache... try force load
+      open(cache_path) { |c|
+        puts "Content-Type: image/png",
+	     ""
+        print c.read
+      }
+    elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
+       Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= cachestat.mtime
+      # no output mode.
       puts "Last-Modified: #{cachestat.mtime.httpdate}", ""
     else
       open(cache_path) { |c|
@@ -110,8 +119,10 @@ ret = []
   ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
   ret = ts.take [:ret, cid, qid, nil, nil]
   break if ret[3] == :success 
-  ts.write [:req, cid, qid, :shtudown]
-  ret = ts.take [:ret, cid, qid, nil, nil]
+  $stderr.puts "get error from server #{ret}"
+  # if fail, try server restart...
+  ts.write [:req, cid, "#{qid}-shutdown", :shtudown]
+  ret = ts.take [:ret, cid, "#{qid}-shutdown", nil, nil]
 }
 
 if ret[3] == :success
@@ -139,4 +150,5 @@ else
   puts "Content-Type: text/plain", "", "InternalError:"
   require 'pp'
   pp ret
+  $stderr.puts "Error: #{ret.inspect}, #{$!}"
 end

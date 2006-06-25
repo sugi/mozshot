@@ -5,7 +5,7 @@ require 'drb'
 require 'rinda/rinda'
 
 DRb.start_service('drbunix:')
-ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock")
+ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock")
 
 ARGV.each_with_index {|uri, i|
   print "Sending request for #{uri}..."

@@ -32,8 +32,27 @@ class MozShot
     @window = nil
     @moz    = nil
     @mutex  = Hash.new {|h, k| h[k] = Mutex.new }
+    if File.symlink? "#{opt[:mozprofdir]}/default/lock"
+      @mozprof = "proc-#{$$}"
+      puts "Using profile #{@mozprof}"
+      require 'fileutils'
+      begin
+        FileUtils.cp_r "#{opt[:mozprofdir]}/default",
+		     "#{opt[:mozprofdir]}/#{@mozprof}"
+        File.unlink "#{opt[:mozprofdir]}/#{@mozprof}/lock"
+      rescue Errno::ENOENT, Errno::EEXIST
+        # ignore
+      end
+      # Signal trap will not works...?
+      trap(:INT, "FileUtils.rm_rf('#{opt[:mozprofdir]}/#{@mozprof}')".untaint )
+      trap(:QUIT, "FileUtils.rm_rf('#{opt[:mozprofdir]}/#{@mozprof}')".untaint )
+      trap(:TERM, "FileUtils.rm_rf('#{opt[:mozprofdir]}/#{@mozprof}')".untaint )
+      trap(:ABRT, "FileUtils.rm_rf('#{opt[:mozprofdir]}/#{@mozprof}')".untaint )
+    else
+      @mozprof = 'default'
+    end
     Gtk.init
-    Gtk::MozEmbed.set_profile_path opt[:mozprofdir], 'default'
+    Gtk::MozEmbed.set_profile_path opt[:mozprofdir], @mozprof
     @gtkthread = Thread.new { Gtk.main }
   end
   attr_accessor :opt, :gtkthread
@@ -86,6 +105,7 @@ class MozShot
         end
       }
 
+      puts "Loading: #{url}"
       @moz.location = url
       pixbuf = nil
 
@@ -95,6 +115,7 @@ class MozShot
           pixbuf = getpixbuf(@window.child.parent_window, shotopt)
         }
       rescue Timeout::Error
+        puts "Timeouted."
         # TODO
         Gtk::Window.toplevels.each { |w|
           # I can't close modal dialog....
@@ -133,6 +154,9 @@ class MozShot
 
   def shutdown
     Gtk.main_quit
+    if @mozprof != 'default'
+      FileUtils.rm_rf("#{opt[:mozprofdir]}/#{@mozprof}")
+    end
     join
   end
 end
@@ -147,7 +171,7 @@ if __FILE__ == $0
     require 'drb'
     require 'rinda/rinda'
     DRb.start_service('drbunix:')
-    drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/default/drbsock"
+    drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     ms.renew_mozwin
     i = 0
