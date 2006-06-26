@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!--#if expr="$QUERY_STRING_UNESCAPED = /^uri=(https?:.*)/" -->
+  <!--#set var="uri" value="$1" -->
+  <!--#set var="formuri" value="$1" -->
+<!--#else -->
+  <!--#set var="formuri" value="http://www.mozilla.org/" -->
+<!--#endif -->
+<html>
+<head>
+<link href="default.css" rel="stylesheet" media="all" type="text/css" />
+<title>Mozshot</title>
+</head>
+<body>
+<!--#include virtual="welcome.shtml" -->
+<form method="GET">
+  <!--#include virtual="forment.shtml?${formuri}" -->
+</form>
+<!--#if expr='"$uri" = ""' -->
+  <!--#include virtual="demo.shtml" -->
+<!--#else -->
+  <div class="reqimages">
+  <a href="<!--#echo var='uri' -->">
+    <img src="<!--#echo var='SCRIPT_URI' -->shot/small/?<!--#echo var='uri' -->"
+     width="64" height="64" alt="" title="ScreenShot 64x64" />
+  </a>
+  <a href="<!--#echo var='uri' -->">
+    <img src="<!--#echo var='SCRIPT_URI' -->shot/?<!--#echo var='uri' -->"
+     width="128" height="128" alt="" title="ScreenShot 128x128" />
+  </a>
+  <a href="<!--#echo var='uri' -->">
+    <img src="<!--#echo var='SCRIPT_URI' -->shot/large/?<!--#echo var='uri' -->"
+     width="256" height="256" alt="" title="ScreenShot 256x256" />
+  </a>
+  </div>
+  <!--#include virtual="guide.shtml?${uri}" -->
+  <pre class="htmlcode">
+&lt;a href="<!--#echo var='uri' -->"&gt;
+&lt;img alt="" width="128" height="128" border="0"
+    src="<!--#echo var='SCRIPT_URI' -->shot/?<!--#echo var='uri' -->"&gt;
+&lt;/a&gt;</pre>
+<!--#endif -->
+</body>
+</html>

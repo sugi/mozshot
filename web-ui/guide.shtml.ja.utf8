@@ -1,0 +1,13 @@
+<h3>画像URL</h3>
+<ul>
+  <li><a href="<!--#echo var='SCRIPT_URI' -->shot/?<!--#echo var='QUERY_STRING' -->">
+    <!--#echo var='SCRIPT_URI' -->shot/?<!--#echo var='QUERY_STRING' -->
+    </a></li>
+  <li><a href="<!--#echo var='SCRIPT_URI' -->shot/large/?<!--#echo var='QUERY_STRING' -->">
+    <!--#echo var='SCRIPT_URI' -->shot/large/?<!--#echo var='QUERY_STRING' -->
+    </a></li>
+  <li><a href="<!--#echo var='SCRIPT_URI' -->shot/small/?<!--#echo var='QUERY_STRING' -->">
+    <!--#echo var='SCRIPT_URI' -->shot/small/?<!--#echo var='QUERY_STRING' -->
+    </a></li>
+</ul>
+<h3>サンプル HTML コード</h3>

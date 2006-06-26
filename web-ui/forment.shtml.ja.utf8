@@ -1,0 +1,4 @@
+<input type="text" name="uri" id="uri"
+  value="<!--#echo var='QUERY_STRING' -->">
+<br />
+<input type="submit" id="submit" value="スクリーンショットを撮る!">

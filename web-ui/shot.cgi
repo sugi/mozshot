@@ -120,8 +120,8 @@ ret = []
 2.times {
   ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
   ret = ts.take [:ret, cid, qid, nil, nil]
-  break if ret[3] == :success 
-  $stderr.puts "get error from server #{ret}"
+  break if ret[3] == :success && !ret[4].nil?
+  $stderr.puts "get error from server #{ret.inspect}"
   # if fail, try server restart...
   ts.write [:req, cid, "#{qid}-shutdown", :shtudown]
   ret = ts.take [:ret, cid, "#{qid}-shutdown", nil, nil]
@@ -130,7 +130,6 @@ ret = []
 if ret[3] == :success
   mtime = Time.now
   image = ret[4]
-  ret[4].nil? and $stderr.puts "weird success #{ret}"
 
   require 'RMagick'
   timg = Magick::Image.from_blob(image)[0]
