@@ -1,0 +1,11 @@
+<h1>Mozshot</h1>
+<div>Welcome to Mozilla ScreenShot Service</div>
+
+<p>
+Take screenshot of any URL, powered by Mozilla and Ruby.
+</p>
+
+<p>
+Currently, <a href="/shot">Very simple usage</a> is just provided,
+ but you can make <a href="source.html">unlimited customize</a> :)
+</p>
