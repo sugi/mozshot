@@ -189,7 +189,7 @@ if __FILE__ == $0
           filename = ms.screenshot_file(req[4][:uri], req[4][:filename],
                                         req[4][:opt]||{})
 	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
-          ts.write [:ret, req[1], req[2], :success, buf], 300
+          ts.write [:ret, req[1], req[2], :success, filename], 300
         elsif req[3] == :shutdown
           ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
           puts "shutdown request was accepted, going shutdown."
