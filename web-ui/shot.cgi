@@ -76,32 +76,33 @@ imgsize.empty? or args[:opt][:imgsize] = imgsize.map {|i| i-8}
 args[:opt][:keepratio] = keepratio
 
 cache_hash = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")
-cache_path = "#{cache_dir}/#{cache_hash}"
+cache_path = "#{cache_dir}/#{cache_hash}.png"
 
 begin
   cachestat = File.stat(cache_path)
   if cgi.params['nocache'][0] != 'true' && cachestat.size != 0 &&
       cachestat.mtime.to_i + cache_expire > Time.now.to_i
-    if ENV['HTTP_IF_MODIFIED_SINCE'] &&
-       ENV['HTTP_IF_MODIFIED_SINCE'] =~ /; length=0/
-      # browser have broken cache... try force load
-      open(cache_path) { |c|
-        puts "Content-Type: image/png",
-	     ""
-        print c.read
-      }
-    elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
-       Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= cachestat.mtime
-      # no output mode.
-      puts "Last-Modified: #{cachestat.mtime.httpdate}", ""
-    else
-      open(cache_path) { |c|
-        puts "Content-Type: image/png",
-	     "Last-Modified: #{cachestat.mtime.httpdate}",
-	     ""
-        print c.read
-      }
-    end
+    #if ENV['HTTP_IF_MODIFIED_SINCE'] &&
+    #   ENV['HTTP_IF_MODIFIED_SINCE'] =~ /; length=0/
+    #  # browser have broken cache... try force load
+    #  open(cache_path) { |c|
+    #    puts "Content-Type: image/png",
+    #     ""
+    #    print c.read
+    #  }
+    #elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
+    #   Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= cachestat.mtime
+    #  # no output mode.
+    #  puts "Last-Modified: #{cachestat.mtime.httpdate}", ""
+    #else
+    #  open(cache_path) { |c|
+    #    puts "Content-Type: image/png",
+    #         "Last-Modified: #{cachestat.mtime.httpdate}",
+    #         ""
+    #    print c.read
+    #  }
+    #end
+    puts "Location: /#{cache_path}", "" # use apache internal redirect
     exit
   elsif cgi.params['nocache'][0] != 'true'
     File.unlink(cache_path)
@@ -140,12 +141,13 @@ if ret[3] == :success
   shadow.composite!(timg, Magick::CenterGravity, Magick::OverCompositeOp)
   image = shadow.to_blob
 
-  print image
+  #print image
   #$stdout.close
   open(cache_path, "w") {|f|
     f << image
   }
   File.utime(Time.now, mtime, cache_path)
+  puts "Location: /#{cache_path}", "" # use apache internal redirect
 else
   puts "Content-Type: text/plain", "", "InternalError:"
   require 'pp'
