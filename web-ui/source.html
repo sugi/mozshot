@@ -6,7 +6,7 @@ a {
   text-decoration: none;
 }
 a:hover {
-  border-bottom: 1px solid blue;
+  text-decoration: underline;
 }
 img {
   border: none;
@@ -17,28 +17,30 @@ body {
 #h {
   color: snow;
 }
+#h, #v {
+  font-family: monospace;
+}
 </style>
 <script language="JavaScript" type="text/javascript">
   function draw_text() {
+    var h = document.getElementById("h");
+    while (h.innerHTML.indexOf(" ") > -1) {
+      h.innerHTML = h.innerHTML.replace(" ", "_");
+    }
     move_char();
   }
-  function move_char(leadspace) {
-    if (!leadspace) leadspace = 0;
+  function move_char() {
     var from = document.getElementById("h");
     var to = document.getElementById("v");
     to.innerHTML = to.innerHTML.substring(0, to.innerHTML.length-1);
-    if (leadspace > 0) {
-      to.innerHTML += "&nbsp;_";
-    } else {
-      to.innerHTML += from.innerHTML.charAt(0) + "_";
-    }
-    var spaced = leadspace;
-    leadspace = (from.innerHTML.charAt(1) == " " ? 1 : 0);
-    if (spaced == 0)
-      from.innerHTML = from.innerHTML.substring(1+leadspace);
+    var c = from.innerHTML.charAt(0);
+    if (c == "_")
+      c = "&nbsp;";
+    to.innerHTML += c + "_";
+    from.innerHTML = from.innerHTML.substring(1);
     if (from.innerHTML.length <= 0) {
       // nothing
-    } else if (leadspace > 0) {
+    } else if (from.innerHTML.charAt(0) == "_") {
       setTimeout("move_char(1)", 150);
     } else if (from.innerHTML.charAt(0) == ";") {
       setTimeout("move_char(0)", 1200);
