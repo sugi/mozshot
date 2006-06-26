@@ -4,7 +4,7 @@ README
 MozShot - Web site thumbnail service by gtkmozembed.
 
 Copyright (C) 2005 Tatsuki Sugiura
-Released in the Ruby License
+Released unlder the License same as Ruby.
 
 This was based on MozSnapshooter written by Mirko Maischberger.
   http://mirko.lilik.it/Ruby-GNOME2/moz-snapshooter.rb
@@ -18,17 +18,19 @@ And I refered many similar implementation. Thanks for all!
 How to use
 ------
 
-Simple snapshot.
+Simple way:
+
+ Type below in your XTerminal.
 
    mozshot http://www.google.com/ shot.png
 
 
-Daemon mode.
+Daemon mode:
 
   # run TupleSpace daemon
-  ./ts.rb
+  ./ts.rb &
   # run snapshot daemon
-  ./mozshot -d
+  ./mozshot -d &
   # run client
   ./client.rb http://foo.bar
 

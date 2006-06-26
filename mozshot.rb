@@ -3,7 +3,7 @@
 # MozShot - Web site thumbnail service by gtkmozembed.
 #
 # Copyright (C) 2005 Tatsuki Sugiura <sugi@nemui.org>
-# Released under the Ruby License.
+# Released under the License same as Ruby.
 #
 # 
 # This was based on MozSnapshooter written by Mirko Maischberger.

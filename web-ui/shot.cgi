@@ -13,6 +13,7 @@ require 'digest/md5'
 require 'time'
 
 cache_dir = 'cache'
+cache_baseurl = '/cache' # must start with /
 cache_expire = 1800
 cid = $$
 qid = ENV["UNIQUE_ID"] || $$+rand
@@ -42,7 +43,7 @@ else
     if $3 && $4 && $3.to_i != 0 && $4.to_i != 0
       winsize = [$3.to_i, $4.to_i]
     else
-      winsize[1] = (winsize[0]*imgsize[1]/imgsize[0]).to_i
+      winsize[1] = (winsize[0].to_f*imgsize[1]/imgsize[0]).to_i
       keepratio = false
     end
   end
@@ -75,8 +76,8 @@ winsize.empty? or args[:opt][:winsize] = winsize.map {|i| i-8}
 imgsize.empty? or args[:opt][:imgsize] = imgsize.map {|i| i-8}
 args[:opt][:keepratio] = keepratio
 
-cache_hash = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")
-cache_path = "#{cache_dir}/#{cache_hash}.png"
+cache_name = Digest::MD5.hexdigest("#{[winsize, imgsize].join(",")}|#{uri}")+".png"
+cache_path = "#{cache_dir}/#{cache_name}"
 
 begin
   cachestat = File.stat(cache_path)
@@ -102,7 +103,7 @@ begin
     #    print c.read
     #  }
     #end
-    puts "Location: /#{cache_path}", "" # use apache internal redirect
+    puts "Location: #{cache_baseurl}/#{cache_name}", "" # use apache internal redirect
     exit
   elsif cgi.params['nocache'][0] != 'true'
     File.unlink(cache_path)
@@ -128,10 +129,8 @@ ret = []
 
 if ret[3] == :success
   mtime = Time.now
-  puts "Content-Type: image/png",
-       "Last-Modified: #{mtime.httpdate}",
-       ""
   image = ret[4]
+  ret[4].nil? and $stderr.puts "weird success #{ret}"
 
   require 'RMagick'
   timg = Magick::Image.from_blob(image)[0]
@@ -141,13 +140,16 @@ if ret[3] == :success
   shadow.composite!(timg, Magick::CenterGravity, Magick::OverCompositeOp)
   image = shadow.to_blob
 
+  #puts "Content-Type: image/png",
+  #     "Last-Modified: #{mtime.httpdate}",
+  #     ""
   #print image
   #$stdout.close
   open(cache_path, "w") {|f|
     f << image
   }
   File.utime(Time.now, mtime, cache_path)
-  puts "Location: /#{cache_path}", "" # use apache internal redirect
+  puts "Location: #{cache_baseurl}/#{cache_name}", "" # use apache internal redirect
 else
   puts "Content-Type: text/plain", "", "InternalError:"
   require 'pp'
