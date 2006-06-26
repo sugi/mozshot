@@ -122,7 +122,7 @@ class MozShot
           w.modal? and raise InternalError,
             "MozShot gone to wrong state. pelease restart process..."
         }
-        return nil
+        raise
       end
 
       if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
@@ -182,12 +182,14 @@ if __FILE__ == $0
       p req
       begin
         if req[3] == :shot_buf
-          ts.write [:ret, req[1], req[2], :success,
-		    ms.screenshot(req[4][:uri], req[4][:opt]||{})], 300
+          buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
+	  buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
+          ts.write [:ret, req[1], req[2], :success, buf], 300
         elsif req[3] == :shot_file
-          ts.write [:ret, req[1], req[2], :success,
-		    ms.screenshot_file(req[4][:uri], req[4][:filename],
-                                       req[4][:opt]||{})], 300
+          filename = ms.screenshot_file(req[4][:uri], req[4][:filename],
+                                        req[4][:opt]||{})
+	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
+          ts.write [:ret, req[1], req[2], :success, buf], 300
         elsif req[3] == :shutdown
           ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
           puts "shutdown request was accepted, going shutdown."
