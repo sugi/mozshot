@@ -15,6 +15,21 @@ Origianl idea by Andrew McCall - <andrew@textux.com>
 And I refered many similar implementation. Thanks for all!
 
 
+
+Requirement
+------
+
+ * mozshot.rb (simple)
+   * X server
+   * ruby 1.8 above
+   * ruby gnome2
+   * ruby gtkmozembed binding (included in ruby gnome2)
+ * mozshot.rb (daemon mode)
+   * drb + rinda
+ * Sample CGI interface
+   * apache + mod_ssi
+   * Rmagick (Ruby ImageMagick Interface)
+
 How to use
 ------
 

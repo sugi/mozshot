@@ -8,7 +8,8 @@ exprot MOZILLA_FIVE_HOME=/usr/lib/xulrunner
 ulimit -c unlimited
 
 Xvfb :$displayno -nolisten tcp -screen 0 2048x2048x16
-if [ -e ~/.mozilla/mozshot/default/drbsock ]; then
+
+if [ -e ~/.mozilla/mozshot/drbsock ]; then
   echo "drb socket already exists"
   exit 1
 fi
