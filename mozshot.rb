@@ -92,9 +92,10 @@ class MozShot
   def screenshot(url, useropt = {})
     shotopt = opt.dup.merge! useropt
     q = Queue.new
+    pixbuf = nil
     @mutex[:shot].synchronize {
       renew_mozwin(shotopt)
-      @moz.signal_connect("net_stop") {
+      sig_handle = @moz.signal_connect("net_stop") {
         begin
           Gtk::timeout_add(100) {
             q.push :loaded
@@ -104,14 +105,15 @@ class MozShot
           puts e.class, e.message, e.backtrace
         end
       }
+      #sig_handle = set_shot_handler(@moz, q)
 
       puts "Loading: #{url}"
       @moz.location = url
-      pixbuf = nil
 
       begin
         timeout(opt[:timeout]){
-          q.pop
+          #q.pop
+          sleep 1
           pixbuf = getpixbuf(@window.child.parent_window, shotopt)
         }
       rescue Timeout::Error
@@ -124,27 +126,44 @@ class MozShot
         }
         raise
       end
+      @moz.signal_handler_disconnect(sig_handle)
+    }
 
-      if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
-	   shotopt[:imgsize] != shotopt[:winsize]
-        width, height = *shotopt[:imgsize]
-        if shotopt[:keepratio]
-          ratio = shotopt[:winsize][0].to_f / shotopt[:winsize][1]
-          if width.to_i.zero? || !height.to_i.zero? && height * ratio < width
-            width  = height * ratio
-          elsif height.to_i.zero? || !width.to_i.zero? && width / ratio < height
-            height = width / ratio
-          end
+    if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
+        shotopt[:imgsize] != shotopt[:winsize]
+      width, height = *shotopt[:imgsize]
+      if shotopt[:keepratio]
+        ratio = shotopt[:winsize][0].to_f / shotopt[:winsize][1]
+        if width.to_i.zero? || !height.to_i.zero? && height * ratio < width
+          width  = height * ratio
+        elsif height.to_i.zero? || !width.to_i.zero? && width / ratio < height
+          height = width / ratio
         end
-        pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
       end
-      pixbuf.save_to_buffer(opt[:imgformat])
+      pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
+    end
+    pixbuf.save_to_buffer(opt[:imgformat])
+  end
+
+  def set_shot_handler(moz, queue)
+    moz.signal_connect("net_stop") {
+      begin
+        Gtk::timeout_add(100) {
+          queue.push :loaded
+          false
+        }
+      rescue => e
+        puts e.class, e.message, e.backtrace
+      end
     }
   end
 
   def getpixbuf(gdkw, shotopt = {})
     x, y, width, height, depth = gdkw.geometry
-    Gdk::Pixbuf.from_drawable(nil, gdkw, 0, 0, width, height)
+    pb = Gdk::Pixbuf.from_drawable(nil, gdkw, 0, 0, width, height)
+    puts "new pixbuf: #{pb.inspect}"
+    #GC.trace_object(pb)
+    pb
   end
 
   def cleanup
@@ -174,12 +193,12 @@ if __FILE__ == $0
     drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     ms.renew_mozwin
-    i = 0
     loop {
       puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
       print "took request: "
       p req
+      i = 0
       begin
         if req[3] == :shot_buf
           buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
@@ -198,19 +217,13 @@ if __FILE__ == $0
           raise "Unknown request"
         end
       rescue InternalError => e
-        ts.write [:ret, req[1], req[2], :error, e.message]
+        ts.write [:ret, req[1], req[2], :error, e.inspect]
         raise e
       rescue => e
-        ts.write [:ret, req[1], req[2], :error, e.message]
+        ts.write [:ret, req[1], req[2], :error, e.inspect+e.message]
       end
       ms.cleanup
-
-      # I cannot use inifinite loop until solving mem leak problem...
-      i += 1
-      if i > 60
-        puts "max times exeeded, going shutdown"
-        break
-      end
+      GC.start
     }
   else
     ms.screenshot_file ARGV[0], (ARGV[1]|| "mozshot.png")
