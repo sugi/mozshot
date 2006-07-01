@@ -67,3 +67,11 @@ Tips
      user_pref("intl.charset.default", "Shift_JIS");
      user_pref("intl.charset.detector", "ja_parallel_state_machine");
 
+* To get screenshot of https://... URI with XULRunner, you need to make 
+  disable modal dialog.
+
+     user_pref("security.warn_entering_secure", false);
+     user_pref("security.warn_entering_weak", false);
+     user_pref("security.warn_leaving_secure", false);
+     user_pref("security.warn_viewing_mixed", false);
+
