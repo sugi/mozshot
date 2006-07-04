@@ -224,14 +224,11 @@ class MozShotCGI
     cid = $$
     qid = ENV["UNIQUE_ID"] || $$+rand
 
-    2.times {
+    3.times {
       ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
       ret = ts.take [:ret, cid, qid, nil, nil]
       return  ret[4]  if ret[3] == :success && !ret[4].nil?
 
-      # if fail, try restart server...
-      ts.write [:req, cid, "#{qid}-shutdown", :shtudown], Rinda::SimpleRenewer.new(30)
-      ret = ts.take [:ret, cid, "#{qid}-shutdown", nil, nil]
     }
     raise Fail, "Error from server: #{ret[4]}"
   end
