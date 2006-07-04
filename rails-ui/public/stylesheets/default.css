@@ -1,0 +1,82 @@
+body {
+  margin: 1em 10% 1em 10%;
+  position: relative;
+} 
+a {
+  text-decoration: none;
+}
+a:hover {
+  /* text-decoration: underline; */
+  border-bottom: blue 1px solid;
+}
+img {
+  border: none;
+}
+div.demolist {
+  position: relative;
+  width: 100%;
+}
+div.demolist img.thumb {
+  float: right;
+  margin: 0px 0px 0.2em 0.2em;
+}
+div.demolist div.item {
+  width: 47%;
+  padding: 0px 0px 0px 0px;
+  margin-top: 2em;
+  float: left;
+  position: relative;
+}
+div.demolist div.odd {
+  clear: both;
+  margin-right: 2%;
+}
+div.demolist div.even {
+  margin-left: 2%;
+}
+div.demolist a {
+  font-weight: bold;
+}
+div.demolist p {
+  font-size: 85%;
+  margin-left: 0.2em;
+}
+form {
+  background-color: #EAEAEA;
+  padding: 1em 1em 1em 1em; 
+  border: solid 1px #CFCFCF;
+}
+form.simpleui {
+  text-align: right;
+}
+form.advancedui div.buttons {
+  text-align: right;
+}
+form.advancedui #submit {
+  float: right;
+}
+#form-end {
+  clear: both;
+}
+#param_uri {
+  width: 100%;
+  border: inset 1px gray;
+  padding: 1px 2px 1px 2px;
+  margin: 0px 0px 0.2em 0px;
+}
+#submit {
+  border: outset 1px gray;
+}
+.reqimages {
+  margin: 1em 0px 1em 0px;
+  text-align: center;
+}
+.reqimages a {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+pre {
+  border: 1px solid gray;
+  overflow: auto;
+  padding: 0.2em 0.2em 0.2em 0.5em;
+}

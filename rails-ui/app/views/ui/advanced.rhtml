@@ -1,0 +1,63 @@
+<%= javascript_include_tag 'prototype' %>
+<%= javascript_include_tag 'behaviour.js' %>
+<%= javascript_tag '
+  function toggle_imgsize() {
+    resize_p = $("param_noresize").checked
+    $("param_img_x").disabled = resize_p
+    $("param_img_y").disabled = resize_p
+  }
+' %>
+
+<%= start_form_tag({:action => 'advanced'}, {:class => 'advancedui'}) %>
+<%= text_field 'param', 'uri', :size => 80, :value => @params[:param] && @params[:param][:uri] %>
+
+Window Size:
+<%= text_field 'param', 'win_x', :size => 4, :value => @params[:param] && @params[:param][:win_x] || 1000 %>
+x
+<%= text_field 'param', 'win_y', :size => 4, :value => @params[:param] && @params[:param][:win_y] || 1000 %>
+
+Image Size:
+<%= text_field 'param', 'img_x', :size => 4, :value => @params[:param] && @params[:param][:img_x] || 600 %>
+x
+<%= text_field 'param', 'img_y', :size => 4, :value => @params[:param] && @params[:param][:img_y] || 600 %>
+<br />
+
+<% 
+  @noresize_opt = {:onClick => 'toggle_imgsize()'}
+  @params[:param][:noresize] == 'true' and
+      @noresize_opt[:checked] = 'checked'
+%>
+<%= check_box 'param', 'noresize', @noresize_opt, 'true' %>No Resize
+
+&nbsp;
+<% 
+  @keepratio_opt = {}
+  @params[:param][:keepratio] == 'true' and
+      @keepratio_opt[:checked] = 'checked'
+%>
+<%= check_box 'param', 'keepratio', @keepratio_opt, 'true' %>Keep Ratio
+
+&nbsp;
+<% 
+  @effect_opt = {}
+  @params[:param][:effect] == 'true' and
+      @effect_opt[:checked] = 'checked'
+%>
+<%= check_box 'param', 'effect', @effect_opt, 'true', 'false' %>DropShadow
+
+<%= submit_tag "Take ScreenShot", :id => "submit", :name => nil %>
+<div id='form-end'>
+</div>
+<%= end_form_tag %>
+
+<% if @uri %>
+<h3>Image URL</h3>
+<pre><%= @image_uri %>
+</pre>
+<% end %>
+
+<div class="reqimages">
+  <%= @uri and link_to "<img src='#{@image_uri}' alt=''>", @uri %>
+</div>
+
+<%= javascript_tag 'toggle_imgsize();' %>

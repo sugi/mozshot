@@ -1,0 +1,22 @@
+<p>
+おすきなの URL のスクリーンショットが取れます。<br />
+
+<a href="http://img.simpleapi.net/">
+  SimpleAPIサムネイル作成API
+</a>や
+<a href="http://screenshot.hatena.ne.jp/">
+  はてなスクリーンショット
+</a>
+みたいなもんです。
+ただバックエンドが Gecko だったり微妙に高機能だったり多少不安定だったします。
+</p>
+
+<p>
+まだ細かいな UI や説明はありません(<a href="<%= @shotbase %>">*</a>)が、
+ <a href="/source.html">無制限のカスタマイズ</a>は可能かもしれませんよ。
+</p>
+
+<%= start_form_tag({:action => 'simple'}, {:class => 'simpleui'}) %>
+<%= text_field 'param', 'uri', :size => 80, :value => @params[:param] && @params[:param][:uri] %>
+<%= submit_tag "スクリーンショットを撮る!", :id => "submit", :name => nil %>
+<%= end_form_tag %>

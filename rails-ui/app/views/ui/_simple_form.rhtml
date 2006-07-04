@@ -1,0 +1,13 @@
+<p>
+Take screenshot of any URL, powered by Mozilla and Ruby.
+</p>
+
+<p>
+Currently, <a href="<%= @shotbase %>">Very simple usage</a> is just provided,
+but you can make <a href="source.html">unlimited customize</a> :)
+</p>
+
+<%= start_form_tag({:action => 'simple'}, {:class => 'simpleui'}) %>
+<%= text_field 'param', 'uri', :size => 80, :value => @params[:param] && @params[:param][:uri] %>
+<%= submit_tag "Take ScreenShot", :id => "submit", :name => nil %>
+<%= end_form_tag %>
