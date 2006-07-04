@@ -165,14 +165,14 @@ class MozShotCGI
     rescue Fail => e
       header = "Content-Type: text/plain"
       body = "Internal Error:\n#{e.inspect}"
-      $stderr.puts "#{Time.now}: Error: #{e.inspect}, req={@req.inspect}"
+      cgi.print "#{Time.now}: Error: #{e.inspect}, req={@req.inspect}"
     rescue => e
       header = "Content-Type: text/plain"
       body = "Internal Error:\n#{e.inspect}"
-      $stderr.puts "#{Time.now}: Unhandled Exception: #{e.inspect}, req={@req.inspect}"
+      cgi.print "#{Time.now}: Unhandled Exception: #{e.inspect}, req={@req.inspect}"
     ensure
-      puts header, ""
-      print body
+      cgi.print [header, '', ''].join("\r\n")
+      cgi.print body
     end
   end
 
