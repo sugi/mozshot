@@ -192,12 +192,12 @@ if __FILE__ == $0
     drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock"
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     ms.renew_mozwin
+    i = 0
     loop {
       puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
       print "took request ##{i}: "
       p req
-      i = 0
       begin
         if req[3] == :shot_buf
           buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
@@ -208,10 +208,10 @@ if __FILE__ == $0
                                         req[4][:opt]||{})
 	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
           ts.write [:ret, req[1], req[2], :success, filename], 300
-        elsif req[3] == :shutdown
-          ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
-          puts "shutdown request was accepted, going shutdown."
-          break
+        #elsif req[3] == :shutdown
+        #  ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
+        #  puts "shutdown request was accepted, going shutdown."
+        #  break
         else
           raise "Unknown request"
         end
