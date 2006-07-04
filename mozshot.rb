@@ -9,7 +9,7 @@
 # This was based on MozSnapshooter written by Mirko Maischberger.
 #   http://mirko.lilik.it/Ruby-GNOME2/moz-snapshooter.rb
 #
-# Origianl idea by Andrew McCall - <andrew@textux.com>
+# Origianl idea by Andrew McCall - <andrew at textux.com>
 #   http://www.hackdiary.com/archives/000055.html
 #
 # And I refered many similar implementations. Thanks for all!
