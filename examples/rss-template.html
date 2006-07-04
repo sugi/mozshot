@@ -1,0 +1,18 @@
+<h2> Hot bookmarks with image </h2>
+<div class="demolist">
+<% rss.items.each_with_index { |item, i| %>
+<div class="item <%= (i+1) % 2 == 0 ? 'even' : 'odd' %>">
+  <a href="<%= item.link %>">
+    <img class="thumb" alt=" * "
+         src="http://mozshot.nemui.org/shot?<%= item.link %>"
+	 width="128" height="128" />
+  </a>
+  <a href="<%= item.link %>">
+    <%= item.title %>
+  </a>
+  <p>
+    <%= item.description %>
+  </p>
+</div>
+<% } %>
+</div>

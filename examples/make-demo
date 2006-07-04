@@ -1,0 +1,17 @@
+#!/bin/sh
+
+basedir="`dirname $0`"/..
+
+function update_bookmark() {
+  ruby "$basedir/examples/rss-fetch.rb" "$1" "$2" \
+    "$basedir/examples/rss-template.html"
+}
+
+update_bookmark \
+  'http://b.hatena.ne.jp/hotentry?mode=rss' \
+  "$basedir/web-ui/hatena-bookmarks.html"
+
+update_bookmark \
+  http://del.icio.us/rss/ \
+  "$basedir/web-ui/delicious-bookmarks.html"
+
