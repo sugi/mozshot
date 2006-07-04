@@ -137,7 +137,7 @@ class MozShotCGI
 	  head = "Last-Modified: #{mtime.httpdate}"
 	  body = ""
 	else
-          header = "Content-Type: image/png\nLast-Modified: #{mtime.httpdate}"
+          header = "Content-Type: image/png\r\nLast-Modified: #{mtime.httpdate}"
 	  open(cache_path) {|c|
             body = c.read
 	  }
@@ -171,7 +171,7 @@ class MozShotCGI
       body = "Internal Error:\n#{e.inspect}"
       cgi.print "#{Time.now}: Unhandled Exception: #{e.inspect}, req={@req.inspect}"
     ensure
-      cgi.print [header, '', ''].join("\r\n")
+      cgi.print header, "\r\n\r\n"
       cgi.print body
     end
   end
@@ -263,5 +263,9 @@ class MozShotFCGI < MozShotCGI
 end
 
 if __FILE__ == $0
-  MozShotCGI.new.run
+  if $0 =~ /\.fcgi$/ 
+    MozShotFCGI.new.run
+  else
+    MozShotCGI.new.run
+  end
 end
