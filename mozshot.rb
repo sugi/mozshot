@@ -112,8 +112,7 @@ class MozShot
 
       begin
         timeout(opt[:timeout]){
-          #q.pop
-          sleep 1
+          q.pop
           pixbuf = getpixbuf(@window.child.parent_window, shotopt)
         }
       rescue Timeout::Error
@@ -196,7 +195,7 @@ if __FILE__ == $0
     loop {
       puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
-      print "took request: "
+      print "took request ##{i}: "
       p req
       i = 0
       begin
@@ -224,6 +223,11 @@ if __FILE__ == $0
       end
       ms.cleanup
       GC.start
+      i += 1
+      if i > 120
+        puts "max request exceeded, exitting..."
+        break
+      end
     }
   else
     ms.screenshot_file ARGV[0], (ARGV[1]|| "mozshot.png")
