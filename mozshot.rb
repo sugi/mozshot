@@ -27,7 +27,8 @@ class MozShot
     end
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
              :winsize => [800, 800], :imgsize => [],
-	     :timeout => 30, :imgformat => "png", :keepratio => true }
+	     :timeout => 30, :imgformat => "png",
+	     :keepratio => true, :shot_timeouted => true }
     @opt.merge! useropt
     @window = nil
     @moz    = nil
@@ -95,17 +96,17 @@ class MozShot
     pixbuf = nil
     @mutex[:shot].synchronize {
       renew_mozwin(shotopt)
-      sig_handle = @moz.signal_connect("net_stop") {
-        begin
-          Gtk::timeout_add(100) {
-            q.push :loaded
-            false
-          }
-        rescue => e
-          puts e.class, e.message, e.backtrace
-        end
-      }
-      #sig_handle = set_shot_handler(@moz, q)
+      #sig_handle = @moz.signal_connect("net_stop") {
+      #  begin
+      #    Gtk::timeout_add(100) {
+      #      q.push :loaded
+      #      false
+      #    }
+      #  rescue => e
+      #    puts e.class, e.message, e.backtrace
+      #  end
+      #}
+      sig_handle = set_shot_handler(@moz, q)
 
       puts "Loading: #{url}"
       @moz.location = url
@@ -113,6 +114,7 @@ class MozShot
       begin
         timeout(opt[:timeout]){
           q.pop
+	  sleep 0.1
           pixbuf = getpixbuf(@window.child.parent_window, shotopt)
         }
       rescue Timeout::Error
@@ -123,7 +125,12 @@ class MozShot
           w.modal? and raise InternalError,
             "MozShot gone to wrong state. pelease restart process..."
         }
-        raise
+	if opt[:shot_timeouted]
+          puts "opt[:shot_timeouted] is set, forceing screenshot..."
+          pixbuf = getpixbuf(@window.child.parent_window, shotopt)
+	else
+          raise
+	end
       end
       @moz.signal_handler_disconnect(sig_handle)
     }
@@ -160,14 +167,14 @@ class MozShot
   def getpixbuf(gdkw, shotopt = {})
     x, y, width, height, depth = gdkw.geometry
     pb = Gdk::Pixbuf.from_drawable(nil, gdkw, 0, 0, width, height)
-    puts "new pixbuf: #{pb.inspect}"
+    #puts "new pixbuf: #{pb.inspect}"
     #GC.trace_object(pb)
     pb
   end
 
   def cleanup
     @moz and @moz.location = "about:blank"
-    #GC.start
+    GC.start
   end
 
   def shutdown
@@ -222,9 +229,9 @@ if __FILE__ == $0
         ts.write [:ret, req[1], req[2], :error, e.inspect+e.message]
       end
       ms.cleanup
-      GC.start
+      #GC.start
       i += 1
-      if i > 120
+      if i > 100
         puts "max request exceeded, exitting..."
         break
       end
