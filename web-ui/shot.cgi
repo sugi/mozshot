@@ -14,7 +14,8 @@ class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :effect => true, :timeout => 18}
+      @opt = {:imgsize => [128, 128], :effect => true,
+	      :timeout => 18, :shot_timeouted => false}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
