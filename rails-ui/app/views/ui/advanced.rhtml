@@ -45,6 +45,14 @@ x
 %>
 <%= check_box 'param', 'effect', @effect_opt, 'true', 'false' %>DropShadow
 
+&nbsp;
+<% 
+  @nocache_opt = {}
+  @params[:param][:nocache] == 'true' and
+      @nocache_opt[:checked] = 'checked'
+%>
+<%= check_box 'param', 'nocache', @nocache_opt, 'true', 'false' %>No Cache
+
 <%= submit_tag "Take ScreenShot", :id => "submit", :name => nil %>
 <div id='form-end'>
 </div>
