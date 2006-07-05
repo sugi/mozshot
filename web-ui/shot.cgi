@@ -14,7 +14,7 @@ class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :effect => true}
+      @opt = {:imgsize => [128, 128], :effect => true, :timeout => 18}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
@@ -115,7 +115,7 @@ class MozShotCGI
     header = "Content-Type: text/plain"
     body   = ""
     begin
-      cache_file = get_image_filename
+      cache_file = prepare_cache_file
       cache_path = "#{opt[:cache_dir]}/cache_file"
       if opt[:internal_redirect]
         # use apache internal redirect
@@ -176,7 +176,7 @@ class MozShotCGI
     end
   end
 
-  def get_image_filename
+  def prepare_cache_file
     break_len = 4
     cache_name = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
     cache_base = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
