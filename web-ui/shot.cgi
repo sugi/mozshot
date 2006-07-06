@@ -9,13 +9,14 @@
 require 'drb'
 require 'rinda/rinda'
 require 'digest/md5'
+require 'timeout'
 
 class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :effect => true,
-	      :timeout => 18, :shot_timeouted => false}
+      @opt = {:imgsize => [128, 128], :winsize => [1000, 1000],
+	      :effect => true, :timeout => 18, :shot_timeouted => false}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
@@ -60,9 +61,7 @@ class MozShotCGI
         if $3.to_i != 0 && $4.to_i != 0
           @opt[:winsize] = [$3.to_i, $4.to_i]
 	elsif @opt[:imgsize]
-          winsize = [1000, 1000]
-          winsize[1] = (winsize[0].to_f * @opt[:imgsize][1] / @opt[:imgsize][0]).to_i
-          @opt[:winsize] = winsize
+          @opt[:winsize][1] = (@opt[:winsize][0].to_f * @opt[:imgsize][1] / @opt[:imgsize][0]).to_i
           @opt[:keepratio] = false
         end
       end
@@ -178,11 +177,22 @@ class MozShotCGI
   end
 
   def prepare_cache_file
-    break_len = 4
-    cache_name = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
-    cache_base = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
-    cache_file = "#{cache_name[0, break_len]}/#{cache_name}"
-    cache_path = "#{opt[:cache_dir]}/#{cache_file}"
+    break_len   = 4
+    cache_name  = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
+    cache_base  = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
+    cache_file  = "#{cache_name[0, break_len]}/#{cache_name}"
+    cache_path  = "#{opt[:cache_dir]}/#{cache_file}"
+    cache_queue = cache_path + ".queued"
+
+    begin
+      if File.mtime(cache_queue).to_i + opt[:timeout] > Time.now.to_i
+        timeout(@opt[:timeout]+1) {
+          loop { open(cache_queue).close; sleep }
+        }
+      end
+    rescue Errno::ENOENT, Timeout::Error
+      # ignore
+    end
 
     begin
       st = File.stat(cache_path)
@@ -192,14 +202,15 @@ class MozShotCGI
       elsif cgi.params['nocache'][0] != 'true'
         File.unlink(cache_path)
       end
-    rescue Errno::ENOENT, Errno::EPERM
+    rescue Errno::ENOENT
       # ignore
     end
 
     File.directory? cache_base or Dir.mkdir(cache_base)
-    open(cache_path, "w") { |c|
+    open(cache_queue, "w") { |c|
       c << get_image
     }
+    File.rename(cache_queue, cache_path)
 
     return cache_file
   end
