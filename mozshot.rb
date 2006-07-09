@@ -223,10 +223,10 @@ if __FILE__ == $0
           raise "Unknown request"
         end
       rescue InternalError => e
-        ts.write [:ret, req[1], req[2], :error, e.inspect]
+        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backgrace.join("\n")}"]
         raise e
       rescue => e
-        ts.write [:ret, req[1], req[2], :error, e.inspect+e.message]
+        ts.write [:ret, req[1], req[2], :error, "{e.inspect}\n#{e.message}\n#{e.backgrace.join("\n")}"]
       end
       ms.cleanup
       #GC.start
