@@ -165,11 +165,11 @@ class MozShotCGI
     rescue Fail => e
       header = "Content-Type: text/plain"
       body = "Internal Error:\n#{e.inspect}"
-      cgi.print "#{Time.now}: Error: #{e.inspect}, req={@req.inspect}"
+      STDERR.puts "#{Time.now}: Error: #{e.inspect} #{e.message}: #{e.backtrace.join("\n")}, req=#{@req.inspect}"
     rescue => e
       header = "Content-Type: text/plain"
       body = "Internal Error:\n#{e.inspect}"
-      cgi.print "#{Time.now}: Unhandled Exception: #{e.inspect}, req={@req.inspect}"
+      STDERR.puts "#{Time.now}: Unhandled Exception: #{e.inspect} #{e.message}: #{e.backtrace.join("\n")}, req=#{@req.inspect}"
     ensure
       cgi.print header, "\r\n\r\n"
       cgi.print body
@@ -185,8 +185,8 @@ class MozShotCGI
     cache_queue = cache_path + ".queued"
 
     begin
-      if File.mtime(cache_queue).to_i + opt[:timeout] > Time.now.to_i
-        timeout(@opt[:timeout]+1) {
+      if File.mtime(cache_queue).to_i + req.opt[:timeout] > Time.now.to_i
+        timeout(req.opt[:timeout]+1) {
           loop { open(cache_queue).close; sleep }
         }
       end
