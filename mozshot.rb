@@ -64,20 +64,22 @@ class MozShot
 
   def renew_mozwin(useropt = {})
     @mutex[:mozwin].synchronize {
-      topt = opt.dup.merge! useropt
-      w = Gtk::Window.new
-      #w.title = "MozShot"
-      w.decorated = false
-      w.has_frame = false
-      w.border_width = 0
-      w.resize(topt[:winsize][0], topt[:winsize][1])
-      m = Gtk::MozEmbed.new
-      m.chrome_mask = Gtk::MozEmbed::ALLCHROME
-      w << m
-      @moz.nil? or @moz.destroy
-      @window.nil? or @window.destroy
-      @window = w
-      @moz    = m
+      unless @moz && @window
+        topt = opt.dup.merge! useropt
+        w = Gtk::Window.new
+        #w.title = "MozShot"
+        w.decorated = false
+        w.has_frame = false
+        w.border_width = 0
+        w.resize(topt[:winsize][0], topt[:winsize][1])
+        m = Gtk::MozEmbed.new
+        m.chrome_mask = Gtk::MozEmbed::ALLCHROME
+        w << m
+        @moz.nil? or @moz.destroy
+        @window.nil? or @window.destroy
+        @window = w
+        @moz    = m
+      end
     }
     @window.show_all
     @window.move(0,0)
@@ -96,17 +98,7 @@ class MozShot
     pixbuf = nil
     @mutex[:shot].synchronize {
       renew_mozwin(shotopt)
-      #sig_handle = @moz.signal_connect("net_stop") {
-      #  begin
-      #    Gtk::timeout_add(100) {
-      #      q.push :loaded
-      #      false
-      #    }
-      #  rescue => e
-      #    puts e.class, e.message, e.backtrace
-      #  end
-      #}
-      sig_handle = set_shot_handler(@moz, q)
+      sig_handle = set_load_handler(@moz, q)
 
       puts "Loading: #{url}"
       @moz.location = url
@@ -115,7 +107,6 @@ class MozShot
         timeout(opt[:timeout]){
           q.pop
 	  sleep 0.1
-          pixbuf = getpixbuf(@window.child.parent_window, shotopt)
         }
       rescue Timeout::Error
         puts "Timeouted."
@@ -127,12 +118,12 @@ class MozShot
         }
 	if opt[:shot_timeouted]
           puts "opt[:shot_timeouted] is set, forceing screenshot..."
-          pixbuf = getpixbuf(@window.child.parent_window, shotopt)
 	else
           raise
 	end
       end
       @moz.signal_handler_disconnect(sig_handle)
+      pixbuf = getpixbuf(@window.child.parent_window, shotopt)
     }
 
     if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
@@ -148,10 +139,12 @@ class MozShot
       end
       pixbuf = pixbuf.scale(width, height, Gdk::Pixbuf::INTERP_HYPER)
     end
-    pixbuf.save_to_buffer(opt[:imgformat])
+    buf = pixbuf.save_to_buffer(opt[:imgformat])
+    pixbuf = nil
+    buf
   end
 
-  def set_shot_handler(moz, queue)
+  def set_load_handler(moz, queue)
     moz.signal_connect("net_stop") {
       begin
         Gtk::timeout_add(100) {
@@ -229,9 +222,8 @@ if __FILE__ == $0
         ts.write [:ret, req[1], req[2], :error, "{e.inspect}\n#{e.message}\n#{e.backgrace.join("\n")}"]
       end
       ms.cleanup
-      #GC.start
       i += 1
-      if i > 100
+      if i > 60
         puts "max request exceeded, exitting..."
         break
       end
