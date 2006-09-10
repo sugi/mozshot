@@ -4,6 +4,7 @@ displayno=51
 export DISPLAY=:${displayno}.0
 #export MOZILLA_FIVE_HOME=/usr/lib/firefox
 exprot MOZILLA_FIVE_HOME=/usr/lib/xulrunner
+export MOZSHOT_RUN_AS_DAEMON=1
 
 ulimit -c unlimited
 
@@ -13,6 +14,8 @@ if [ -e ~/.mozilla/mozshot/drbsock ]; then
   echo "drb socket already exists"
   exit 1
 fi
+
+cd `dirname $0`/..
 bash -c 'while :; do ./ts.rb; done'&
 bash -c "while :; do ruby mozshot.rb -d >> mozshot-${displayno}.log 2>&1; sleep 0.3; done"&
 
