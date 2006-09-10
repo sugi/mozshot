@@ -39,9 +39,13 @@ class MozShot
       require 'fileutils'
       begin
         FileUtils.cp_r "#{opt[:mozprofdir]}/default",
-		     "#{opt[:mozprofdir]}/#{@mozprof}"
+          "#{opt[:mozprofdir]}/#{@mozprof}"
+      rescue Errno::EEXIST
+        # ignore.... HMmmmmmmmmmmm............
+      end
+      begin
         File.unlink "#{opt[:mozprofdir]}/#{@mozprof}/lock"
-      rescue Errno::ENOENT, Errno::EEXIST
+      rescue Errno::ENOENT
         # ignore
       end
       # Signal trap will not works...?
@@ -216,17 +220,17 @@ if __FILE__ == $0
           raise "Unknown request"
         end
       rescue MozShot::InternalError => e
-        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backgrace.join("\n")}"]
+        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"]
         raise e
       rescue => e
-        ts.write [:ret, req[1], req[2], :error, "{e.inspect}\n#{e.message}\n#{e.backgrace.join("\n")}"]
+        ts.write [:ret, req[1], req[2], :error, "{e.inspect}\n#{e.message}\n#{e.backgtace.join("\n")}"]
       end
       ms.cleanup
       i += 1
       if i > 30
         puts "max request exceeded, exitting..."
-	exit!
-        #break
+	Thread.new{ sleep 3; puts STDERR "shutdown timeouted!"; exit! }
+        break
       end
     }
   else
