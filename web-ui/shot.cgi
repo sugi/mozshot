@@ -87,16 +87,22 @@ class MozShotCGI
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
       :cache_expire  => 10800,
-      :internal_redirect => true,
+      :internal_redirect  => true,
+      :shot_background    => false,
       :expire_real_delete => false
     }
     @opt.merge! opt
     @cgi = nil
     @req = nil
     @ts  = nil
+    @cache_name = nil
+    @cache_path = nil
+    @cache_file = nil
+    @cache_base = nil
+    @break_len   = 4
   end
   attr_writer :cgi, :ts, :req
-  attr_accessor :opt, :cache_name
+  attr_accessor :opt, :break_len
 
   def ts
     @ts and return @ts
@@ -114,12 +120,36 @@ class MozShotCGI
     @req = Request.new(cgi)
   end
 
+  def cache_name
+    @cache_name and return @cache_name
+    @cache_name  = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
+  end
+
+  def cache_base
+    @cache_base and return @cache_base
+    @cache_base  = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
+  end
+
+  def cache_file
+    @cache_file and return @cache_file
+    @cache_file  = "#{cache_name[0, break_len]}/#{cache_name}"
+  end
+
+  def cache_path
+    @cache_path and return @cache_path
+    @cache_path  = "#{opt[:cache_dir]}/#{cache_file}"
+  end
+
   def run
     header = "Content-Type: text/plain"
     body   = ""
     begin
-      cache_file = prepare_cache_file
-      cache_path = "#{opt[:cache_dir]}/cache_file"
+      bg_shot = nil
+      if opt[:shot_background] && File.exists?(cache_path) && !File.zero?(cache_path)
+	bg_shot = Thread.new { prepare_cache_file }
+      else
+        prepare_cache_file
+      end
       if opt[:internal_redirect]
         # use apache internal redirect
         header = "Location: #{opt[:cache_baseurl]}/#{cache_file}"
@@ -176,15 +206,12 @@ class MozShotCGI
     ensure
       cgi.print header, "\r\n\r\n"
       cgi.print body
+      $defout.flush
+      bg_shot && bg_shot.join
     end
   end
 
   def prepare_cache_file
-    break_len   = 4
-    cache_name  = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
-    cache_base  = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
-    cache_file  = "#{cache_name[0, break_len]}/#{cache_name}"
-    cache_path  = "#{opt[:cache_dir]}/#{cache_file}"
     cache_queue = cache_path + ".queued"
 
     begin
@@ -272,28 +299,6 @@ class MozShotCGI
   end
 end
 
-class MozShotFCGI < MozShotCGI
-  require 'fcgi'
-
-  def cgi
-    @cgi
-  end
-
-  def run
-    FCGI::each_cgi { |cgi|
-      $defout = cgi.stdoutput
-      @cgi = cgi
-      super
-      @cgi = nil
-      @req = nil
-    }
-  end
-end
-
 if __FILE__ == $0
-  if $0 =~ /\.fcgi$/ 
-    MozShotFCGI.new.run
-  else
-    MozShotCGI.new.run
-  end
+  MozShotCGI.new.run
 end
