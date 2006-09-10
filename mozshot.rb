@@ -183,13 +183,13 @@ end
 if __FILE__ == $0
   ms = MozShot.new
 
-  if ARGV.length == 0
+  if ARGV.length == 0 && !ENV["MOZSHOT_RUN_AS_DAEMON"] # TODO: Change name to MOZSHOT_DAEMON_SOCK
     puts "Usage: $0 <URL> [outputfile (default='mozshot.png')]"
-  elsif ARGV[0] == "-d"
+  elsif ENV["MOZSHOT_RUN_AS_DAEMON"]
     require 'drb'
     require 'rinda/rinda'
     DRb.start_service('drbunix:')
-    drburi = ARGV[1] || "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock"
+    drburi = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
     ms.renew_mozwin
     i = 0
@@ -223,9 +223,10 @@ if __FILE__ == $0
       end
       ms.cleanup
       i += 1
-      if i > 60
+      if i > 30
         puts "max request exceeded, exitting..."
-        break
+	exit!
+        #break
       end
     }
   else

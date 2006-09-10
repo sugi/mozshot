@@ -84,8 +84,9 @@ class MozShotCGI
       :drburi        => "drbunix:drbsock",
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
-      :cache_expire  => 1800,
-      :internal_redirect => true
+      :cache_expire  => 10800,
+      :internal_redirect => true,
+      :expire_real_delete => false
     }
     @opt.merge! opt
     @cgi = nil
@@ -192,6 +193,8 @@ class MozShotCGI
       end
     rescue Errno::ENOENT, Timeout::Error
       # ignore
+    rescue IOError
+      # ignore...?
     end
 
     begin
@@ -200,17 +203,28 @@ class MozShotCGI
           st.mtime.to_i + opt[:cache_expire] > Time.now.to_i
         return cache_file
       elsif cgi.params['nocache'][0] != 'true'
-        File.unlink(cache_path)
+        File.unlink(cache_path) if opt[:expire_real_delete]
       end
     rescue Errno::ENOENT
       # ignore
     end
 
     File.directory? cache_base or Dir.mkdir(cache_base)
-    open(cache_queue, "w") { |c|
-      c << get_image
-    }
-    File.rename(cache_queue, cache_path)
+    begin
+      open(cache_queue, "w") { |c|
+        c << get_image
+      }
+      File.rename(cache_queue, cache_path)
+    rescue Fail => e
+      STDERR.puts "requiest failed (#{e.inspect}), return old cache if exists."
+      return cache_file if File.exists? cache_path # return old cache...
+    ensure
+      begin
+        File.unlink(cache_queue)
+      rescue Errno::ENOENT
+        # ignore
+      end
+    end
 
     return cache_file
   end
