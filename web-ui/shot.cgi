@@ -79,6 +79,8 @@ class MozShotCGI
   require 'digest/md5'
   require 'time'
 
+  ALLOW_URI_PATTERN = %r{^(https?://[^(localhost|127\.0\.0\.1)]|about:)};
+
   def initialize(opt = {})
     @opt = {
       :drburi        => "drbunix:drbsock",
@@ -243,7 +245,7 @@ class MozShotCGI
   end
 
   def request_screenshot(args)
-    if args[:uri].nil? || args[:uri].empty?
+    if args[:uri].nil? || args[:uri].empty? || args[:uri] !~ ALLOW_URI_PATTERN
       raise Invalid, "Target URI is empty."
     end
 
