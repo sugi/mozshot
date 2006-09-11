@@ -216,8 +216,9 @@ class MozShotCGI
 
     begin
       if File.mtime(cache_queue).to_i + req.opt[:timeout] > Time.now.to_i
+	opt[:shot_background] and return true
         timeout(req.opt[:timeout]+1) {
-          loop { open(cache_queue).close; sleep }
+          loop { open(cache_queue).close; sleep 0.5 }
         }
       end
     rescue Errno::ENOENT, Timeout::Error
@@ -255,7 +256,7 @@ class MozShotCGI
       end
     end
 
-    return cache_file
+    true
   end
 
   def get_image
