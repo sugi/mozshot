@@ -71,7 +71,7 @@ class MozShot
       unless @moz && @window
         topt = opt.dup.merge! useropt
         w = Gtk::Window.new
-        #w.title = "MozShot"
+        w.title = "MozShot -- Initalized"
         w.decorated = false
         w.has_frame = false
         w.border_width = 0
@@ -102,13 +102,15 @@ class MozShot
     pixbuf = nil
     @mutex[:shot].synchronize {
       renew_mozwin(shotopt)
-      sig_handle = set_load_handler(@moz, q)
+      sig_handle_net   = set_sig_handler("net_stop", q)
+      sig_handle_title = set_sig_handler("title", q)
 
       puts "Loading: #{url}"
       @moz.location = url
 
       begin
         timeout(opt[:timeout]){
+          q.pop
           q.pop
 	  sleep 0.1
         }
@@ -126,7 +128,8 @@ class MozShot
           raise
 	end
       end
-      @moz.signal_handler_disconnect(sig_handle)
+      @moz.signal_handler_disconnect(sig_handle_net)
+      @moz.signal_handler_disconnect(sig_handle_title)
       pixbuf = getpixbuf(@window.child.parent_window, shotopt)
     }
 
@@ -148,11 +151,12 @@ class MozShot
     buf
   end
 
-  def set_load_handler(moz, queue)
-    moz.signal_connect("net_stop") {
+  def set_sig_handler(signame, queue)
+    !signame || signame.empty? and return nil
+    @moz.signal_connect(signame) {
       begin
         Gtk::timeout_add(100) {
-          queue.push :loaded
+          queue.push signame
           false
         }
       rescue => e
@@ -229,7 +233,7 @@ if __FILE__ == $0
       i += 1
       if i > 30
         puts "max request exceeded, exitting..."
-	Thread.new{ sleep 3; puts STDERR "shutdown timeouted!"; exit! }
+	Thread.new{ sleep 3; STDERR.puts "shutdown timeouted!"; exit! }
         break
       end
     }
