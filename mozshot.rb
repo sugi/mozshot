@@ -110,9 +110,10 @@ class MozShot
 
       begin
         timeout(opt[:timeout]){
-          q.pop
-          q.pop
-	  sleep 0.1
+	  sigs = Hash.new
+          while !(sigs["net_stop"] && sigs["title"])
+	    sigs[q.pop] = true
+	  end
         }
       rescue Timeout::Error
         puts "Timeouted."
