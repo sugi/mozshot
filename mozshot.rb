@@ -28,7 +28,8 @@ class MozShot
     @opt = { :mozprofdir => "#{ENV['HOME']}/.mozilla/mozshot",
              :winsize => [800, 800], :imgsize => [],
 	     :timeout => 30, :imgformat => "png",
-	     :keepratio => true, :shot_timeouted => true }
+	     :keepratio => true, :shot_timeouted => false,
+   	     :retry => 0 }
     @opt.merge! useropt
     @window = nil
     @moz    = nil
@@ -105,11 +106,11 @@ class MozShot
       sig_handle_net   = set_sig_handler("net_stop", q)
       sig_handle_title = set_sig_handler("title", q)
 
-      puts "Loading: #{url}"
-      @moz.location = url
-
       begin
-        timeout(opt[:timeout]){
+        puts "Loading: #{url}"
+        @moz.location = url
+
+        timeout(shotopt[:timeout]){
 	  sigs = Hash.new
           while !(sigs["net_stop"] && sigs["title"])
 	    sigs[q.pop] = true
@@ -123,14 +124,20 @@ class MozShot
           w.modal? and raise InternalError,
             "MozShot gone to wrong state. pelease restart process..."
         }
-	if opt[:shot_timeouted]
-          puts "opt[:shot_timeouted] is set, forceing screenshot..."
+	if shotopt[:retry].to_i > 0
+	  puts "timeouted. retring (remain #{shotopt[:retry]})"
+	  shotopt[:retry] -= 1
+	  q.clear
+	  retry
+	elsif shotopt[:shot_timeouted]
+          puts "option :shot_timeouted is set, forceing screenshot..."
 	else
           raise
 	end
       end
       @moz.signal_handler_disconnect(sig_handle_net)
       @moz.signal_handler_disconnect(sig_handle_title)
+      sleep 0.2
       pixbuf = getpixbuf(@window.child.parent_window, shotopt)
     }
 
@@ -227,15 +234,16 @@ if __FILE__ == $0
       rescue MozShot::InternalError => e
         ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"]
         raise e
-      rescue => e
-        ts.write [:ret, req[1], req[2], :error, "{e.inspect}\n#{e.message}\n#{e.backgtace.join("\n")}"]
+      rescue Timeout::Error, StandardError => e
+        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"]
       end
       ms.cleanup
       i += 1
-      if i > 30
+      if i > 20
         puts "max request exceeded, exitting..."
-	Thread.new{ sleep 3; STDERR.puts "shutdown timeouted!"; exit! }
-        break
+	#Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }
+        #break
+	exit!
       end
     }
   else
