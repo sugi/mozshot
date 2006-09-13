@@ -16,7 +16,7 @@ class MozShotCGI
     def initialize(cgi = nil)
       @uri = nil
       @opt = {:imgsize => [128, 128], :winsize => [1000, 1000],
-	      :effect => true, :timeout => 18, :shot_timeouted => false}
+	      :effect => true, :timeout => 18, :shot_timeouted => true}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
@@ -214,9 +214,10 @@ class MozShotCGI
   def prepare_cache_file
     cache_queue = cache_path + ".queued"
 
+    # wait for other queue
     begin
       if File.mtime(cache_queue).to_i + req.opt[:timeout] > Time.now.to_i
-	opt[:shot_background] and return true
+	opt[:shot_background] and return cache_file
         timeout(req.opt[:timeout]+1) {
           loop { open(cache_queue).close; sleep 0.5 }
         }
@@ -256,7 +257,7 @@ class MozShotCGI
       end
     end
 
-    true
+    cache_file
   end
 
   def get_image
@@ -284,7 +285,7 @@ class MozShotCGI
       ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
       ret = ts.take [:ret, cid, qid, nil, nil]
       return  ret[4]  if ret[3] == :success && !ret[4].nil?
-
+      args[:opt][:shot_timeouted] = true # forcely for 2nd try
     }
     raise Fail, "Error from server: #{ret[4]}"
   end
