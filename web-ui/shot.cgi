@@ -15,8 +15,8 @@ class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :winsize => [1000, 1000],
-	      :effect => true, :timeout => 18, :shot_timeouted => true}
+      @opt = {:imgsize => [128, 128], :winsize => [1000, 1000], :retry => 1,
+	      :effect => true, :timeout => 10, :shot_timeouted => true}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
@@ -122,7 +122,12 @@ class MozShotCGI
 
   def cache_name
     @cache_name and return @cache_name
-    @cache_name  = Digest::MD5.hexdigest([req.opt.to_a, req.uri].flatten.join(","))+".png"
+    @cache_name  = Digest::MD5.hexdigest([req.opt[:winsize],
+					  req.opt[:imgsize],
+					  req.opt[:effect],
+					  req.uri].flatten.join(",")) +
+	".#{req.uri[req.uri.length/2, 4].unpack('H*').join}" +
+	"-#{req.uri.length}.png"
   end
 
   def cache_base
@@ -216,7 +221,7 @@ class MozShotCGI
 
     # wait for other queue
     begin
-      if File.mtime(cache_queue).to_i + req.opt[:timeout] > Time.now.to_i
+      if File.mtime(cache_queue).to_i + req.opt[:timeout]*2 > Time.now.to_i
 	opt[:shot_background] and return cache_file
         timeout(req.opt[:timeout]+1) {
           loop { open(cache_queue).close; sleep 0.5 }
@@ -279,15 +284,22 @@ class MozShotCGI
     end
 
     cid = $$
-    qid = ENV["UNIQUE_ID"] || $$+rand
+    qid = args.__id__
 
-    3.times {
-      ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
-      ret = ts.take [:ret, cid, qid, nil, nil]
+    ret = nil
+    2.times {
+      #begin
+        ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
+        ret = ts.take [:ret, cid, qid, nil, nil]
+      #rescue IOError => e
+	#STDERR.puts "Retry for #{e.inspect}"
+        #@ts = nil
+	#exit!
+      #end
       return  ret[4]  if ret[3] == :success && !ret[4].nil?
-      args[:opt][:shot_timeouted] = true # forcely for 2nd try
+      STDERR.puts "get error from server: #{ret.inspect}"
     }
-    raise Fail, "Error from server: #{ret[4]}"
+    raise Fail, "Error from server: #{ret.inspect}"
   end
 
   def do_effect(image)
