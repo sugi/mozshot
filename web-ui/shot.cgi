@@ -221,9 +221,10 @@ class MozShotCGI
 
     # wait for other queue
     begin
-      if File.mtime(cache_queue).to_i + req.opt[:timeout]*2 > Time.now.to_i
+      if File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
+	STDERR.puts ":shot_backgournd is true, return current cache file"
 	opt[:shot_background] and return cache_file
-        timeout(req.opt[:timeout]+1) {
+        timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
           loop { open(cache_queue).close; sleep 0.5 }
         }
       end
@@ -299,7 +300,27 @@ class MozShotCGI
       return  ret[4]  if ret[3] == :success && !ret[4].nil?
       STDERR.puts "get error from server: #{ret.inspect}"
     }
-    raise Fail, "Error from server: #{ret.inspect}"
+    #raise Fail, "Error from server: #{ret.inspect}"
+    STDERR.puts "Error from server, return failimage: #{ret.inspect}, args=#{args.inspect}"
+    failimage(*args[:opt][:imgsize])
+  end
+
+  def failimage(width, height)
+    require 'RMagick'
+    img = Magick::Image.new(width, height) {
+      self.background_color = 'white'
+    }
+    gc = Magick::Draw.new
+    gc.stroke('transparent')
+    gc.font_family('times')
+    gc.pointsize(16)
+    gc.text_align(Magick::RightAlign)
+    gc.font_weight(Magick::BoldWeight)
+    gc.fill('#CCCCCC')
+    gc.text(width-5, height-5, 'Error...')
+    gc.draw(img)
+    img.format='png'
+    img.to_blob
   end
 
   def do_effect(image)
