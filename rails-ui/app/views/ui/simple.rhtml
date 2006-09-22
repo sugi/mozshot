@@ -1,9 +1,9 @@
 <%= render :partial => 'simple_form' %>
 
 <div class="reqimages">
-  <%= link_to "<img src='#{@shotbase}/small?#{@uri}' alt='' title='ScreenShot 64x64' width='64' height='64'>", @uri %>
-  <%= link_to "<img src='#{@shotbase}?#{@uri}' alt='' title='ScreenShot 128x128' width='128' height='128'>", @uri %>
-  <%= link_to "<img src='#{@shotbase}/large?#{@uri}' alt='' title='ScreenShot 256x256' width='256' height='256'>", @uri %>
+  <%= link_to "<img src='#{@shotbase}/small?#{@uri};bg=false' alt='' title='ScreenShot 64x64' width='64' height='64'>", @uri %>
+  <%= link_to "<img src='#{@shotbase}?#{@uri};bg=false' alt='' title='ScreenShot 128x128' width='128' height='128'>", @uri %>
+  <%= link_to "<img src='#{@shotbase}/large?#{@uri};bg=false' alt='' title='ScreenShot 256x256' width='256' height='256'>", @uri %>
 </div>
 
 <h3>Image URL</h3>

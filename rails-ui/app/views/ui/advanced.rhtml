@@ -65,7 +65,7 @@ x
 <% end %>
 
 <div class="reqimages">
-  <%= @uri and link_to "<img src='#{@image_uri}' alt=''>", @uri %>
+  <%= @uri and link_to "<img src='#{@image_uri};bg=false' alt=''>", @uri %>
 </div>
 
 <%= javascript_tag 'toggle_imgsize();' %>

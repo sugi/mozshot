@@ -10,13 +10,15 @@ require 'drb'
 require 'rinda/rinda'
 require 'digest/md5'
 require 'timeout'
+require 'pstore'
+require 'RMagick'
 
 class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
       @opt = {:imgsize => [128, 128], :winsize => [1000, 1000], :retry => 1,
-	      :effect => true, :timeout => 10, :shot_timeouted => true}
+              :effect => true, :timeout => 10, :shot_timeouted => true}
       cgi and read_cgireq(cgi)
     end
     attr_accessor :uri, :opt
@@ -60,7 +62,7 @@ class MozShotCGI
         $1.to_i != 0 && $2.to_i != 0 and @opt[:imgsize] = [$1.to_i, $2.to_i]
         if $3.to_i != 0 && $4.to_i != 0
           @opt[:winsize] = [$3.to_i, $4.to_i]
-	elsif @opt[:imgsize]
+        elsif @opt[:imgsize]
           @opt[:winsize][1] = (@opt[:winsize][0].to_f * @opt[:imgsize][1] / @opt[:imgsize][0]).to_i
           @opt[:keepratio] = false
         end
@@ -99,7 +101,7 @@ class MozShotCGI
     @cache_path = nil
     @cache_file = nil
     @cache_base = nil
-    @break_len   = 4
+    @break_len  = 4
   end
   attr_writer :cgi, :ts, :req
   attr_accessor :opt, :break_len
@@ -123,11 +125,11 @@ class MozShotCGI
   def cache_name
     @cache_name and return @cache_name
     @cache_name  = Digest::MD5.hexdigest([req.opt[:winsize],
-					  req.opt[:imgsize],
-					  req.opt[:effect],
-					  req.uri].flatten.join(",")) +
-	".#{req.uri[req.uri.length/2, 4].unpack('H*').join}" +
-	"-#{req.uri.length}.png"
+                                          req.opt[:imgsize],
+                                          req.opt[:effect],
+                                          req.uri].flatten.join(",")) +
+        ".#{req.uri[req.uri.length/2, 4].unpack('H*').join}" +
+        "-#{req.uri.length}.png"
   end
 
   def cache_base
@@ -146,40 +148,36 @@ class MozShotCGI
   end
 
   def run
+    cgi.params['bg'][0] == 'true' and opt[:shot_background] = true
     header = "Content-Type: text/plain"
     body   = ""
     begin
-      bg_shot = nil
-      if opt[:shot_background] && File.exists?(cache_path) && !File.zero?(cache_path)
-	bg_shot = Thread.new { prepare_cache_file }
-      else
-        prepare_cache_file
-      end
+      prepare_cache_file
       if opt[:internal_redirect]
         # use apache internal redirect
         header = "Location: #{opt[:cache_baseurl]}/#{cache_file}"
         body = ""
       else
-	require 'time' 
-	mtime = File.mtime(cache_path)
+        require 'time' 
+        mtime = File.mtime(cache_path)
         if ENV['HTTP_IF_MODIFIED_SINCE'] &&
            ENV['HTTP_IF_MODIFIED_SINCE'] =~ /; length=0/
           # browser have broken cache... try force load
           header = "Content-Type: image/png"
-	  open(cache_path) {|c|
+          open(cache_path) {|c|
             body = c.read
-	  }
-	elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
-	   Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= mtime
-	  # no output mode.
-	  head = "Last-Modified: #{mtime.httpdate}"
-	  body = ""
-	else
+          }
+        elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
+           Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= mtime
+          # no output mode.
+          head = "Last-Modified: #{mtime.httpdate}"
+          body = ""
+        else
           header = "Content-Type: image/png\r\nLast-Modified: #{mtime.httpdate}"
-	  open(cache_path) {|c|
+          open(cache_path) {|c|
             body = c.read
-	  }
-	end
+          }
+        end
       end
     rescue Invalid
       header = "Content-Type: text/plain"
@@ -212,24 +210,23 @@ class MozShotCGI
       cgi.print header, "\r\n\r\n"
       cgi.print body
       $defout.flush
-      bg_shot && bg_shot.join
     end
   end
 
   def prepare_cache_file
     cache_queue = cache_path + ".queued"
+    cache_tmp   = cache_path + ".tmp"
 
     # wait for other queue
     begin
-      if File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
-	STDERR.puts ":shot_backgournd is true, return current cache file"
-	opt[:shot_background] and return cache_file
+      if ![:shot_background] &&
+         File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
         timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
           loop { open(cache_queue).close; sleep 0.5 }
         }
       end
     rescue Errno::ENOENT, Timeout::Error
-      # ignore
+      # ignore, ENOENT means ready for cache_file
     rescue IOError
       # ignore...?
     end
@@ -247,17 +244,28 @@ class MozShotCGI
     end
 
     File.directory? cache_base or Dir.mkdir(cache_base)
+
     begin
-      open(cache_queue, "w") { |c|
-        c << get_image
-      }
-      File.rename(cache_queue, cache_path)
-    rescue Fail => e
-      STDERR.puts "requiest failed (#{e.inspect}), return old cache if exists."
-      return cache_file if File.exists? cache_path # return old cache...
+      begin
+        open(cache_tmp, "w") { |t|
+          t << get_image
+        }
+      rescue Rinda::RequestExpiredError
+        if !File.exists?(cache_path)
+          open(cache_tmp, "w") { |c|
+            c << get_waitimage
+          }
+          File.utime(0, 0, cache_tmp)
+        end
+      end
+      if File.zero? cache_tmp
+        File.unlink(cache_tmp)
+      else
+        File.rename(cache_tmp, cache_path) 
+      end
     ensure
       begin
-        File.unlink(cache_queue)
+        File.unlink(cache_tmp)
       rescue Errno::ENOENT
         # ignore
       end
@@ -266,50 +274,95 @@ class MozShotCGI
     cache_file
   end
 
-  def get_image
-    opt = req.opt.dup
-
-    if req.opt[:effect]
-      opt[:winsize].nil? or opt[:winsize] = opt[:winsize].map {|i| i-8}
-      opt[:imgsize].nil? or opt[:imgsize] = opt[:imgsize].map {|i| i-8}
+  def gen_actual_reqopt
+    lopt = req.opt.dup
+    if lopt[:effect]
+      lopt[:winsize].nil? or lopt[:winsize] = lopt[:winsize].map {|i| i-8}
+      lopt[:imgsize].nil? or lopt[:imgsize] = lopt[:imgsize].map {|i| i-8}
     end
+    lopt
+  end
 
-    image = request_screenshot({:uri => req.uri, :opt => opt})
-    req.opt[:effect] and image = do_effect(image)
+  def get_waitimage
+    lopt = gen_actual_reqopt
+    image = waitimage(*lopt[:imgsize])
+    lopt[:effect] and image = do_effect(image)
     image
   end
 
-  def request_screenshot(args)
+  def get_image
+    lopt = gen_actual_reqopt
+    cache_queue = cache_path + ".queued"
+    args = {:uri => req.uri, :opt => lopt}
+    cid = nil
+    qid = nil
+
+    queue = PStore.new(cache_queue)
+    begin
+      queue.transaction do |q| q[:test]; end
+    rescue TypeError
+      File.unlink(cache_queue)
+      queue = PStore.new(cache_queue)
+    end
+    
+    queue.transaction do |q|
+      cid = (q[:cid] ||= $$)
+      qid = (q[:qid] ||= args.__id__)
+    end
+
+    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 0 : nil))
+    lopt[:effect] and image = do_effect(image)
+    image
+  end
+
+  def request_queued?(cid ,qid)
+    begin
+      # check doubled queue
+      ts.read [nil, cid, qid, nil, nil], 0
+    rescue Rinda::RequestExpiredError
+      return false
+    end
+    true
+  end
+
+  def request_screenshot(cid, qid, args, timeout = nil)
     if args[:uri].nil? || args[:uri].empty? || args[:uri] !~ ALLOW_URI_PATTERN
       raise Invalid, "Target URI is empty."
     end
 
-    cid = $$
-    qid = args.__id__
-
     ret = nil
-    2.times {
-      #begin
-        ts.write [:req, cid, qid, :shot_buf, args], Rinda::SimpleRenewer.new(30)
-        ret = ts.take [:ret, cid, qid, nil, nil]
-      #rescue IOError => e
-	#STDERR.puts "Retry for #{e.inspect}"
-        #@ts = nil
-	#exit!
-      #end
-      return  ret[4]  if ret[3] == :success && !ret[4].nil?
-      STDERR.puts "get error from server: #{ret.inspect}"
-    }
-    #raise Fail, "Error from server: #{ret.inspect}"
+    request_queued?(cid, qid) or
+      ts.write [:req, cid, qid, :shot_buf, args],
+               Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
+    ret = ts.take [:ret, cid, qid, nil, nil], timeout
+    return ret[4] if ret[3] == :success && !ret[4].nil?
     STDERR.puts "Error from server, return failimage: #{ret.inspect}, args=#{args.inspect}"
     failimage(*args[:opt][:imgsize])
   end
 
-  def failimage(width, height)
-    require 'RMagick'
-    img = Magick::Image.new(width, height) {
+  def emptyimage(width, height)
+    Magick::Image.new(width, height) {
       self.background_color = 'white'
     }
+  end
+
+  def failimage(width, height)
+    img = emptyimage(width, height)
+    gc = Magick::Draw.new
+    gc.stroke('transparent')
+    gc.font_family('times')
+    gc.pointsize(16)
+    gc.text_align(Magick::RightAlign)
+    gc.font_weight(Magick::BoldWeight)
+    gc.fill('#FFCCCC')
+    gc.text(width-5, height-5, 'Error...')
+    gc.draw(img)
+    img.format='png'
+    img.to_blob
+  end
+
+  def waitimage(width, height)
+    img = emptyimage(width, height)
     gc = Magick::Draw.new
     gc.stroke('transparent')
     gc.font_family('times')
@@ -317,14 +370,14 @@ class MozShotCGI
     gc.text_align(Magick::RightAlign)
     gc.font_weight(Magick::BoldWeight)
     gc.fill('#CCCCCC')
-    gc.text(width-5, height-5, 'Error...')
+    gc.text(width-5, height-21, 'Now')
+    gc.text(width-5, height-5, 'Printing')
     gc.draw(img)
     img.format='png'
     img.to_blob
   end
 
   def do_effect(image)
-    require 'RMagick'
     timg = Magick::Image.from_blob(image)[0]
     timg.background_color = '#333'
     shadow = timg.shadow(0, 0, 2, 0.9)
@@ -337,3 +390,7 @@ end
 if __FILE__ == $0
   MozShotCGI.new.run
 end
+
+# vim: set sts=2:
+# vim: set expandtab:
+# vim: set shiftwidth=2:
