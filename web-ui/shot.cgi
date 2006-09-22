@@ -54,9 +54,9 @@ class MozShotCGI
       @uri = cgi.query_string
 
       case cgi.path_info
-      when %r[^/large/?$]
+      when %r[^/large/?]
         @opt[:imgsize] = [256, 256]
-      when %r[^/small/?$]
+      when %r[^/small/?]
         @opt[:imgsize] = [64, 64]
       when %r[^/(?:(\d+)x(\d+))?(?:-(\d+)x(\d+))?]
         $1.to_i != 0 && $2.to_i != 0 and @opt[:imgsize] = [$1.to_i, $2.to_i]
@@ -148,7 +148,8 @@ class MozShotCGI
   end
 
   def run
-    cgi.params['bg'][0] == 'true' and opt[:shot_background] = true
+    cgi.params['bg'][0] == 'false' and opt[:shot_background] = false
+    cgi.path_info =~ %r[/nobg/?] and opt[:shot_background] = false # TODO: change to proper way...
     header = "Content-Type: text/plain"
     body   = ""
     begin
@@ -366,7 +367,7 @@ class MozShotCGI
     gc = Magick::Draw.new
     gc.stroke('transparent')
     gc.font_family('times')
-    gc.pointsize(16)
+    gc.pointsize(15)
     gc.text_align(Magick::RightAlign)
     gc.font_weight(Magick::BoldWeight)
     gc.fill('#CCCCCC')

@@ -232,10 +232,11 @@ if __FILE__ == $0
           raise "Unknown request"
         end
       rescue MozShot::InternalError => e
-        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 600
-        raise e
+        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 3600
+        #raise e
+	exit!
       rescue Timeout::Error, StandardError => e
-        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 600
+        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 3600
       end
       ms.cleanup
       i += 1
