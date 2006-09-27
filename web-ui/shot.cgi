@@ -17,7 +17,7 @@ class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :winsize => [1000, 1000], :retry => 1,
+      @opt = {:imgsize => [128, 128], :winsize => [1100, 1100], :retry => 1,
               :effect => true, :timeout => 10, :shot_timeouted => true}
       cgi and read_cgireq(cgi)
     end
@@ -89,6 +89,7 @@ class MozShotCGI
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
       :cache_expire  => 10800,
+      :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
       :expire_real_delete => false
@@ -169,15 +170,18 @@ class MozShotCGI
             body = c.read
           }
         elsif ENV['HTTP_IF_MODIFIED_SINCE'] &&
-           Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= mtime
+          Time.parse(ENV['HTTP_IF_MODIFIED_SINCE'].split(/;/)[0]) <= mtime
           # no output mode.
-          head = "Last-Modified: #{mtime.httpdate}"
+          header = "Last-Modified: #{mtime.httpdate}"
           body = ""
         else
           header = "Content-Type: image/png\r\nLast-Modified: #{mtime.httpdate}"
           open(cache_path) {|c|
             body = c.read
           }
+        end
+        if opt[:force_nocache]
+          header += "\r\nCache-Contro: no-cache\r\nPragma: no-cache\r\nExpires: Mon, 26 Jul 1997 05:00:00 GMT"
         end
       end
     rescue Invalid
@@ -258,6 +262,8 @@ class MozShotCGI
           }
           File.utime(0, 0, cache_tmp)
         end
+        opt[:internal_redirect] = false
+        opt[:force_nocache] = true
       end
       if File.zero? cache_tmp
         File.unlink(cache_tmp)
@@ -311,7 +317,7 @@ class MozShotCGI
       qid = (q[:qid] ||= args.__id__)
     end
 
-    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 0 : nil))
+    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 5 : nil))
     lopt[:effect] and image = do_effect(image)
     image
   end
@@ -335,7 +341,21 @@ class MozShotCGI
     request_queued?(cid, qid) or
       ts.write [:req, cid, qid, :shot_buf, args],
                Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
-    ret = ts.take [:ret, cid, qid, nil, nil], timeout
+    if timeout.nil?
+      ret = ts.take [:ret, cid, qid, nil, nil], nil
+    else
+      t = timeout.to_f
+      begin
+        ret = ts.take [:ret, cid, qid, nil, nil], 0
+      rescue Rinda::RequestExpiredError
+        if t > 0
+          sleep 0.5
+          t -= 0.5
+          retry
+        end
+        raise
+      end
+    end
     return ret[4] if ret[3] == :success && !ret[4].nil?
     STDERR.puts "Error from server, return failimage: #{ret.inspect}, args=#{args.inspect}"
     failimage(*args[:opt][:imgsize])
