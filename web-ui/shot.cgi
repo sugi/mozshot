@@ -43,6 +43,8 @@ class MozShotCGI
         imgsize = []
         !ix.empty? and imgsize[0] = ix.to_i
         !iy.empty? and imgsize[1] = iy.to_i
+        imgsize[1] and imgsize[0] ||= imgsize[1]
+        imgsize[0] and imgsize[1] ||= imgsize[0]
         !imgsize.empty? and @opt[:imgsize] = imgsize
       end
       
@@ -265,10 +267,14 @@ class MozShotCGI
         opt[:internal_redirect] = false
         opt[:force_nocache] = true
       end
-      if File.zero? cache_tmp
-        File.unlink(cache_tmp)
-      else
-        File.rename(cache_tmp, cache_path) 
+      begin
+        if File.zero? cache_tmp
+          File.unlink(cache_tmp)
+        else
+          File.rename(cache_tmp, cache_path) 
+        end
+      rescue Errno::ENOENT
+        # ignore
       end
     ensure
       begin
