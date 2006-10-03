@@ -35,14 +35,20 @@ class MozShotCGI
       @uri = cgi.params['uri'][0]
 
       wx, wy, ix, iy = cgi['win_x'], cgi['win_y'], cgi['img_x'], cgi['img_y']
-      !wx.empty? && !wy.empty? and @opt[:winsize] = [wx.to_i, wy.to_i]
+
+      winsize = []
+      !wx.empty? && wx.to_i != 0 and winsize[0] = wx.to_i
+      !wy.empty? && wy.to_i != 0 and winsize[1] = wy.to_i
+      winsize[1] and winsize[0] ||= winsize[1]
+      winsize[0] and winsize[1] ||= winsize[0]
+      !winsize.empty? and @opt[:winsize] = winsize
 
       if cgi.params['noresize'][0] == "true"
         @opt[:imgsize] = @opt[:winsize]
       else
         imgsize = []
-        !ix.empty? and imgsize[0] = ix.to_i
-        !iy.empty? and imgsize[1] = iy.to_i
+        !ix.empty? && ix.to_i != 0 and imgsize[0] = ix.to_i
+        !iy.empty? && iy.to_i != 0 and imgsize[1] = iy.to_i
         imgsize[1] and imgsize[0] ||= imgsize[1]
         imgsize[0] and imgsize[1] ||= imgsize[0]
         !imgsize.empty? and @opt[:imgsize] = imgsize
@@ -323,7 +329,7 @@ class MozShotCGI
       qid = (q[:qid] ||= args.__id__)
     end
 
-    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 5 : nil))
+    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 3 : nil))
     lopt[:effect] and image = do_effect(image)
     image
   end
@@ -340,7 +346,15 @@ class MozShotCGI
 
   def request_screenshot(cid, qid, args, timeout = nil)
     if args[:uri].nil? || args[:uri].empty? || args[:uri] !~ ALLOW_URI_PATTERN
-      raise Invalid, "Target URI is empty."
+      raise Invalid, "Invalid URI."
+    elsif args[:opt][:winsize] &&
+      (args[:opt][:winsize][0] < 100 || args[:opt][:winsize][1] < 100 ||
+       args[:opt][:winsize][0] > 3000 || args[:opt][:winsize][1] > 3000)
+      raise Invalid, "Invalid window size."
+    elsif args[:opt][:imgsize] &&
+      (args[:opt][:imgsize][0] < 16 || args[:opt][:imgsize][1] < 16 ||
+       args[:opt][:imgsize][0] > 5000 || args[:opt][:imgsize][1] > 5000)
+      raise Invalid, "Invalid image size."
     end
 
     ret = nil
