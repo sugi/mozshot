@@ -15,6 +15,11 @@
 # And I refered many similar implementations. Thanks for all!
 # 
 
+begin
+  require 'timestamp'
+rescue LoadError
+  # ignore
+end
 require 'gtkmozembed'
 require 'thread'
 require 'timeout'
@@ -61,7 +66,7 @@ class MozShot
     Gtk::MozEmbed.set_profile_path opt[:mozprofdir], @mozprof
     @gtkthread = Thread.new { Gtk.main }
   end
-  attr_accessor :opt, :gtkthread
+  attr_accessor :opt, :gtkthread, :mozprof
 
   def join
     @gtkthread.join
@@ -115,9 +120,10 @@ class MozShot
           while !(sigs["net_stop"] && sigs["title"])
 	    sigs[q.pop] = true
 	  end
+          puts "Load Done."
         }
       rescue Timeout::Error
-        puts "Timeouted."
+        puts "Load Timeouted."
         # TODO
         Gtk::Window.toplevels.each { |w|
           # I can't close modal dialog....
@@ -204,16 +210,21 @@ if __FILE__ == $0
   elsif ENV["MOZSHOT_RUN_AS_DAEMON"]
     require 'drb'
     require 'rinda/rinda'
-    DRb.start_service('drbunix:')
-    drburi = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
-    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(drburi))
+    sockpath = "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
+    begin
+      File.unlink sockpath
+    rescue Errno::ENOENT
+      # ignore
+    end
+    DRb.start_service("drbunix:#{sockpath}")
+    tsuri = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
+    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
     ms.renew_mozwin
     i = 0
     loop {
       puts "waiting for request..."
       req = ts.take [:req, nil, nil, Symbol, Hash]
-      print "took request ##{i}: "
-      p req
+      puts "took request ##{i}: #{req.inspect}"
       begin
         if req[3] == :shot_buf
           buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
@@ -239,11 +250,14 @@ if __FILE__ == $0
         ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 3600
       end
       ms.cleanup
+      STDOUT.flush
       i += 1
-      if i > 20
+      if i > 10
         puts "max request exceeded, exitting..."
+	STDOUT.flush
 	#Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }
         #break
+	ms.shutdown # Hmmm....
 	exit!
       end
     }
@@ -252,3 +266,6 @@ if __FILE__ == $0
   end
   ms.shutdown
 end
+
+# vim: set sw=2:
+# vim: set sts=2:

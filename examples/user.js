@@ -14,7 +14,7 @@ user_pref("intl.charset.detector", "ja_parallel_state_machine");
 user_pref("javascript.enabled", false);
 
 # speed tune...
-user_pref("nglayout.initialpaint.delay", 100);
+user_pref("nglayout.initialpaint.delay", 50);
 user_pref("network.http.max-connections", 45);
 user_pref("network.http.pipelining", true);
 user_pref("network.http.pipelining.firstrequest", true);
@@ -22,4 +22,4 @@ user_pref("network.http.pipelining.maxrequests", 8);
 
 # save mem
 user_pref("browser.sessionhistory.max_total_viewers", 0)
-
+user_pref("browser.cache.memory.capacity", 2048)
