@@ -229,7 +229,7 @@ if __FILE__ == $0
         if req[3] == :shot_buf
           buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
 	  buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
-          ts.write [:ret, req[1], req[2], :success, buf], 300
+          ts.write([:ret, req[1], req[2], :success, buf], 300)
         elsif req[3] == :shot_file
           filename = ms.screenshot_file(req[4][:uri], req[4][:filename],
                                         req[4][:opt]||{})

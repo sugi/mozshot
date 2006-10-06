@@ -117,7 +117,7 @@ class MozShotCGI
 
   def ts
     @ts and return @ts
-    DRb.primary_server || DRb.start_service('drbunix:')
+    DRb.primary_server || DRb.start_service('druby://localhost:0')
     @ts = DRbObject.new_with_uri(opt[:drburi])
   end
 
