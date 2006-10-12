@@ -235,7 +235,7 @@ class MozShotCGI
       if ![:shot_background] &&
          File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
         timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
-          loop { open(cache_queue).close; sleep 0.5 }
+          loop { open(cache_queue).close; sleep 0.2 }
         }
       end
     rescue Errno::ENOENT, Timeout::Error
@@ -270,8 +270,8 @@ class MozShotCGI
           }
           File.utime(0, 0, cache_tmp)
         end
-        opt[:internal_redirect] = false
-        opt[:force_nocache] = true
+        #opt[:internal_redirect] = false
+        #opt[:force_nocache] = true
       end
       begin
         if File.zero? cache_tmp
@@ -362,15 +362,15 @@ class MozShotCGI
       ts.write [:req, cid, qid, :shot_buf, args],
                Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
     if timeout.nil?
-      ret = ts.take [:ret, cid, qid, nil, nil], nil
+      ret = ts.take([:ret, cid, qid, nil, nil], nil)
     else
       t = timeout.to_f
       begin
-        ret = ts.take [:ret, cid, qid, nil, nil], 0
+        ret = ts.take([:ret, cid, qid, nil, nil], 0)
       rescue Rinda::RequestExpiredError
         if t > 0
-          sleep 0.5
-          t -= 0.5
+          sleep 0.2
+          t -= 0.2
           retry
         end
         raise
