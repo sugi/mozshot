@@ -216,7 +216,7 @@ if __FILE__ == $0
     rescue Errno::ENOENT
       # ignore
     end
-    DRb.start_service("drbunix:#{sockpath}")
+    DRb.start_service("drbunix:#{sockpath}", ms)
     tsuri = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
     ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
     ms.renew_mozwin

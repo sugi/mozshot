@@ -4,6 +4,7 @@
 require 'socket'
 require 'fileutils'
 require 'drb'
+require 'timeout'
 
 ARGV.each { |p|
   File.directory? "#{p}/chrome" or next
@@ -14,6 +15,15 @@ ARGV.each { |p|
       drb = DRbObject.new_with_uri("drbunix:#{p}/drbsock")
       puts drb.inspect
       puts drb.to_s
+      begin
+        timeout(30) {
+          drb.screenshot("about:blank")
+        }
+      rescue Timeout::Error
+	puts "killing: #{p}"
+	Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
+	FileUtils.rm_rf(p)
+      end
     end
   rescue Errno::ECONNREFUSED
     FileUtils.rm_rf(p)
