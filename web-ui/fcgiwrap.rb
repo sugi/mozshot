@@ -12,6 +12,7 @@
 #    FCGIWrap.each {
 #      load '/path/to/original.cgi'
 #    }
+#
 
 require 'cgi'
 require 'fcgi'
@@ -28,7 +29,7 @@ if RUBY_VERSION.tr(".", "0").to_i < 10801
 end
 
 class FCGIWrap
-  VERSION = "0.1.4"
+  VERSION = "0.1.5"
   @@cgi = nil
   @@shutdown = false
   class << self
@@ -73,7 +74,7 @@ module Kernel
     end
   end
   def puts(*args)
-    Kernel.print(*args.map{|s| t = s.dup.to_s; t !~ /\n$/ and $t += "\n"; t })
+    Kernel.print(*args.map{|s| t = s.dup.to_s; t !~ /\n$/ and t += "\n"; t })
   end
 end
 
