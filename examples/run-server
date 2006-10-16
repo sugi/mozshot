@@ -5,6 +5,7 @@ export DISPLAY=:${displayno}.0
 #export MOZILLA_FIVE_HOME=/usr/lib/firefox
 exprot MOZILLA_FIVE_HOME=/usr/lib/xulrunner
 export MOZSHOT_RUN_AS_DAEMON=1
+export XAUTHORITY=
 
 ulimit -c unlimited
 
