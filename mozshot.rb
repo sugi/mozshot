@@ -39,7 +39,7 @@ class MozShot
     @window = nil
     @moz    = nil
     @mutex  = Hash.new {|h, k| h[k] = Mutex.new }
-    if File.symlink? "#{opt[:mozprofdir]}/default/lock"
+    if File.directory? "#{opt[:mozprofdir]}/default"
       @mozprof = "proc-#{$$}"
       puts "Using profile #{@mozprof}"
       require 'fileutils'
@@ -112,7 +112,7 @@ class MozShot
       sig_handle_title = set_sig_handler("title", q)
 
       begin
-        puts "Loading: #{url}"
+        puts "Loading: #{url}, opt: #{shotopt.inspect}"
         @moz.location = url
 
         timeout(shotopt[:timeout]){
@@ -210,7 +210,7 @@ if __FILE__ == $0
   elsif ENV["MOZSHOT_RUN_AS_DAEMON"]
     require 'drb'
     require 'rinda/rinda'
-    sockpath = "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
+    sockpath = ms.mozprof == 'default' ? '' : "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
     begin
       File.unlink sockpath
     rescue Errno::ENOENT
