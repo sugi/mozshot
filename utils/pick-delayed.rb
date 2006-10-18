@@ -14,14 +14,12 @@ Find.find(ARGV[1]) { |f|
     begin
       File.mtime($`).to_i == 0 or next
       File.mtime(f).to_i + 120 > Time.now.to_i and next
-      cid = nil
       qid = nil
       PStore.new(f).transaction do |q|
-        cid = q[:cid]
         qid = q[:qid]
       end
       begin
-        image = ts.take([:ret, cid, qid, :success, nil], 0)[4]
+        image = ts.take([:ret, qid, :success, nil], 0)[3][:image]
         open("#{$`}.tmp", "w") {|t| t << image }
         File.rename("#{$`}.tmp", $`)
         puts "write #{$`}"

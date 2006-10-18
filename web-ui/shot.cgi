@@ -112,7 +112,8 @@ class MozShotCGI
     @cache_base = nil
     @break_len  = 4
   end
-  attr_writer :cgi, :ts, :req
+  attr_writer :cgi, :ts, :req,
+    :cache_name, :cache_base, :cache_file, :cache_path
   attr_accessor :opt, :break_len
 
   def ts
@@ -313,7 +314,6 @@ class MozShotCGI
     lopt = gen_actual_reqopt
     cache_queue = cache_path + ".queued"
     args = {:uri => req.uri, :opt => lopt}
-    cid = nil
     qid = nil
 
     queue = PStore.new(cache_queue)
@@ -325,26 +325,25 @@ class MozShotCGI
     end
     
     queue.transaction do |q|
-      cid = (q[:cid] ||= $$)
-      qid = (q[:qid] ||= args.__id__)
+      qid = (q[:qid] ||= "#{$$}.#{args.__id__}")
     end
 
-    image = request_screenshot(cid, qid, args, (opt[:shot_background] ? 3 : nil))
+    image = request_screenshot(qid, args, (opt[:shot_background] ? 3 : nil))
     lopt[:effect] and image = do_effect(image)
     image
   end
 
-  def request_queued?(cid ,qid)
+  def request_queued?(qid)
     begin
       # check doubled queue
-      ts.read [nil, cid, qid, nil, nil], 0
+      ts.read [nil, qid, nil, nil], 0
     rescue Rinda::RequestExpiredError
       return false
     end
     true
   end
 
-  def request_screenshot(cid, qid, args, timeout = nil)
+  def request_screenshot(qid, args, timeout = nil)
     if args[:uri].nil? || args[:uri].empty? || args[:uri] !~ ALLOW_URI_PATTERN
       raise Invalid, "Invalid URI."
     elsif args[:opt][:winsize] &&
@@ -358,15 +357,17 @@ class MozShotCGI
     end
 
     ret = nil
-    request_queued?(cid, qid) or
-      ts.write [:req, cid, qid, :shot_buf, args],
+    args[:timestamp]  = Time.now
+    args[:cache_name] = cache_name
+    request_queued?(qid) or
+      ts.write [:req, qid, :shot_buf, args],
                Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
     if timeout.nil?
-      ret = ts.take([:ret, cid, qid, nil, nil], nil)
+      ret = ts.take([:ret, qid, nil, nil], nil)
     else
       t = timeout.to_f
       begin
-        ret = ts.take([:ret, cid, qid, nil, nil], 0)
+        ret = ts.take([:ret, qid, nil, nil], 0)
       rescue Rinda::RequestExpiredError
         if t > 0
           sleep 0.2
@@ -376,7 +377,7 @@ class MozShotCGI
         raise
       end
     end
-    return ret[4] if ret[3] == :success && !ret[4].nil?
+    return ret[3][:image] if ret[2] == :success && !ret[3].nil? && !ret[3][:image].nil?
     STDERR.puts "Error from server, return failimage: #{ret.inspect}, args=#{args.inspect}"
     failimage(*args[:opt][:imgsize])
   end

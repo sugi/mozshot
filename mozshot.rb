@@ -34,7 +34,7 @@ class MozShot
              :winsize => [800, 800], :imgsize => [],
 	     :timeout => 30, :imgformat => "png",
 	     :keepratio => true, :shot_timeouted => false,
-   	     :retry => 0 }
+	     :retry => 0 }
     @opt.merge! useropt
     @window = nil
     @moz    = nil
@@ -223,31 +223,37 @@ if __FILE__ == $0
     i = 0
     loop {
       puts "waiting for request..."
-      req = ts.take [:req, nil, nil, Symbol, Hash]
+      req = ts.take [:req, nil, Symbol, Hash]
+      ts.write [:stat, req[1], :accept, $$]
       puts "took request ##{i}: #{req.inspect}"
       begin
-        if req[3] == :shot_buf
-          buf = ms.screenshot(req[4][:uri], req[4][:opt]||{})
+        if req[2] == :shot_buf
+          buf = ms.screenshot(req[3][:uri], req[3][:opt]||{})
 	  buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
-          ts.write([:ret, req[1], req[2], :success, buf], 300)
-        elsif req[3] == :shot_file
-          filename = ms.screenshot_file(req[4][:uri], req[4][:filename],
-                                        req[4][:opt]||{})
+          ts.write([:ret, req[1], :success, {:image => buf, :req => req[3]}], 300)
+        elsif req[2] == :shot_file
+          filename = ms.screenshot_file(req[3][:uri], req[3][:filename],
+                                        req[3][:opt]||{})
 	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
-          ts.write [:ret, req[1], req[2], :success, filename], 300
-        #elsif req[3] == :shutdown
-        #  ts.write [:ret, req[1], req[2], :accept, "going shutdown"]
+          ts.write [:ret, req[1], :success, {:filename => filename, :req => req[3]}], 300
+        #elsif req[2] == :shutdown
+        #  ts.write [:ret, req[1], :accept, "going shutdown"]
         #  puts "shutdown request was accepted, going shutdown."
         #  break
         else
           raise "Unknown request"
         end
       rescue MozShot::InternalError => e
-        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 3600
+        ts.write [:ret, req[1], :error, {:err => e, :req => req[3]}], 3600
         #raise e
 	exit!
       rescue Timeout::Error, StandardError => e
-        ts.write [:ret, req[1], req[2], :error, "#{e.inspect}\n#{e.message}\n#{e.backtrace.join("\n")}"], 3600
+        ts.write [:ret, req[1], :error, {:err => e, :req => req[3]}], 3600
+      end
+      begin
+        ts.take [:stat, req[1], nil, nil], 0
+      rescue Rinda::RequestExpiredError
+	# ignore
       end
       ms.cleanup
       STDOUT.flush
