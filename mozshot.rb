@@ -224,18 +224,18 @@ if __FILE__ == $0
     loop {
       puts "waiting for request..."
       req = ts.take [:req, nil, Symbol, Hash]
-      ts.write [:stat, req[1], :accept, $$]
+      ts.write [:stat, req[1], :accept, {:pid => $$, :display => ENV['DISPLAY'], :timestamp => Time.now}], 600
       puts "took request ##{i}: #{req.inspect}"
       begin
         if req[2] == :shot_buf
           buf = ms.screenshot(req[3][:uri], req[3][:opt]||{})
 	  buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
-          ts.write([:ret, req[1], :success, {:image => buf, :req => req[3]}], 300)
+          ts.write([:ret, req[1], :success, {:image => buf, :req => req[3], :timestamp => Time.now}], 300)
         elsif req[2] == :shot_file
           filename = ms.screenshot_file(req[3][:uri], req[3][:filename],
                                         req[3][:opt]||{})
 	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
-          ts.write [:ret, req[1], :success, {:filename => filename, :req => req[3]}], 300
+          ts.write [:ret, req[1], :success, {:filename => filename, :req => req[3], :timestamp => Time.now}], 300
         #elsif req[2] == :shutdown
         #  ts.write [:ret, req[1], :accept, "going shutdown"]
         #  puts "shutdown request was accepted, going shutdown."
@@ -244,11 +244,11 @@ if __FILE__ == $0
           raise "Unknown request"
         end
       rescue MozShot::InternalError => e
-        ts.write [:ret, req[1], :error, {:err => e, :req => req[3]}], 3600
+        ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
         #raise e
 	exit!
       rescue Timeout::Error, StandardError => e
-        ts.write [:ret, req[1], :error, {:err => e, :req => req[3]}], 3600
+        ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
       end
       begin
         ts.take [:stat, req[1], nil, nil], 0
