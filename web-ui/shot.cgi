@@ -326,6 +326,8 @@ class MozShotCGI
     
     queue.transaction do |q|
       qid = (q[:qid] ||= "#{$$}.#{args.__id__}")
+      q[:req] ||= req
+      q[:opt] ||= lopt
     end
 
     image = request_screenshot(qid, args, (opt[:shot_background] ? 3 : nil))

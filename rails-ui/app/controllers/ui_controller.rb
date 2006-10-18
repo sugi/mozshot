@@ -28,7 +28,7 @@ class UiController < ApplicationController
       @image_uri = @shotbase + '?' + param.map{|p| p.map{|v| CGI.escape v }.join('=') }.join(';')
     else
       @params[:param][:keepratio] = 'true'
-      @params[:param][:effect]    = 'true'
+      # @params[:param][:effect]    = 'true'
     end
   end
 

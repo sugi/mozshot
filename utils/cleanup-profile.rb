@@ -7,7 +7,7 @@ require 'drb'
 require 'timeout'
 
 ARGV.each { |p|
-  File.directory? "#{p}/chrome" or next
+  File.directory? "#{p}/Cache" or next
   begin
     UNIXSocket.open("#{p}/drbsock").close
     puts "ok: #{p}"
@@ -23,14 +23,14 @@ ARGV.each { |p|
 	puts "killing: #{p}"
 	Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
 	FileUtils.rm_rf(p)
+      rescue NoMethodError => e
+	STDERR.puts "wierd profile: #{p}; #{e.inspect}"
+	puts "wierd profile: #{p}; #{e.inspect}"
       end
     end
-  rescue Errno::ECONNREFUSED
+  rescue Errno::ECONNREFUSED, Errno::ENOENT
     FileUtils.rm_rf(p)
     puts "cleanup: #{p}"
-  rescue Errno::ENOENT
-    puts "skip: #{p}"
-    # ignore
   end
 }
 

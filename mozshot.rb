@@ -143,7 +143,7 @@ class MozShot
       end
       @moz.signal_handler_disconnect(sig_handle_net)
       @moz.signal_handler_disconnect(sig_handle_title)
-      sleep 0.2
+      sleep 0.3
       pixbuf = getpixbuf(@window.child.parent_window, shotopt)
     }
 
