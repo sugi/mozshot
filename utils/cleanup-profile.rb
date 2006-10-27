@@ -31,6 +31,11 @@ ARGV.each { |p|
   rescue Errno::ECONNREFUSED, Errno::ENOENT
     FileUtils.rm_rf(p)
     puts "cleanup: #{p}"
+    begin
+      Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
+    rescue Errno::ESRCH
+      # ignore
+    end
   end
 }
 

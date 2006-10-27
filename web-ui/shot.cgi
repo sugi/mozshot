@@ -159,7 +159,7 @@ class MozShotCGI
 
   def run
     cgi.params['bg'][0] == 'false' and opt[:shot_background] = false
-    cgi.path_info =~ %r[/nobg/?] and opt[:shot_background] = false # TODO: change to proper way...
+    #cgi.path_info =~ %r[/nobg/?] and opt[:shot_background] = false # TODO: change to proper way...
     header = "Content-Type: text/plain"
     body   = ""
     begin
