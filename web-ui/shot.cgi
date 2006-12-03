@@ -232,12 +232,15 @@ class MozShotCGI
     cache_tmp   = cache_path + ".tmp"
 
     # wait for other queue
+    run_other_queue = false
     begin
-      if ![:shot_background] &&
-         File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
-        timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
-          loop { open(cache_queue).close; sleep 0.2 }
-        }
+      if File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
+        run_other_queue = true
+        if !opt[:shot_background]
+          timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
+            loop { open(cache_queue).close; sleep 0.2 }
+          }
+        end
       end
     rescue Errno::ENOENT, Timeout::Error
       # ignore, ENOENT means ready for cache_file
@@ -248,7 +251,7 @@ class MozShotCGI
     begin
       st = File.stat(cache_path)
       if st.size != 0 && cgi.params['nocache'][0] != 'true' &&
-          st.mtime.to_i + opt[:cache_expire] > Time.now.to_i
+          (st.mtime.to_i + opt[:cache_expire] > Time.now.to_i || run_other_queue && opt[:shot_background])
         return cache_file
       elsif cgi.params['nocache'][0] != 'true'
         File.unlink(cache_path) if opt[:expire_real_delete]
