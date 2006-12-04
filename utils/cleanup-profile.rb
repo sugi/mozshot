@@ -13,11 +13,11 @@ ARGV.each { |p|
     puts "ok: #{p}"
     begin
       drb = DRbObject.new_with_uri("drbunix:#{p}/drbsock")
-      puts drb.inspect
-      puts drb.to_s
       begin
         timeout(30) {
-          drb.screenshot("about:blank")
+	  puts drb.inspect
+	  puts drb.to_s
+	  drb.screenshot("about:blank")
         }
       rescue Timeout::Error
 	puts "killing: #{p}"
