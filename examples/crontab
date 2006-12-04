@@ -1,0 +1,8 @@
+# mozshot
+@reboot			rm -rf .mozilla/mozshot/drbsock; sh -xv www/mozshot/examples/run-server >/dev/null 2>&1
+35 3 * * *		nice -19 find /var/tmp/mozshot-cache -mtime +21 -type f | xargs -r rm -f
+46 3 * * *		cd  /var/tmp/mozshot-cache && touch tmp/keep && find -maxdepth 1 -type d ! -name . | nice -19 xargs -r rmdir --ignore-fail-on-non-empty
+12,42 * * * *		nice -19 timeout 60 ruby -r www/mozshot/timestamp.rb www/mozshot/utils/cleanup-profile.rb ~/.mozilla/mozshot/proc-* >> data/log/mozshot-proccleanup.log
+*/2 * * * *		cd www/mozshot/web-ui && nice -19 ruby -r ../timestamp.rb ../utils/flush-result.rb drbunix:/home/sugi/.mozilla/mozshot/drbsock >> ~/data/log/mozshot-resultflush.log
+21 */6 * * *		nice -19 find /tmp \( -name druby\* -o -name \*.swf -o -name \*.pdf \) -mtime +1 2>/dev/null | xargs rm -f
+*/29 * * * *		nice -19 find /var/tmp/mozshot-cache/tmp -type f -mmin +10 | xargs rm -f
