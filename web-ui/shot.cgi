@@ -100,6 +100,7 @@ class MozShotCGI
       :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
+      :background_wait    => 0,
       :expire_real_delete => false
     }
     @opt.merge! opt
@@ -231,16 +232,18 @@ class MozShotCGI
     cache_queue = cache_path + ".queued"
     cache_tmp   = cache_path + ".tmp"
 
-    # wait for other queue
     run_other_queue = false
     begin
       if File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
         run_other_queue = true
         if !opt[:shot_background]
+          # wait for other queue
           timeout(req.opt[:timeout]*(req.opt[:retry].to_i+1)+1) {
             loop { open(cache_queue).close; sleep 0.2 }
           }
         end
+      else
+        File.unlink(cache_queue)
       end
     rescue Errno::ENOENT, Timeout::Error
       # ignore, ENOENT means ready for cache_file
@@ -264,8 +267,9 @@ class MozShotCGI
 
     begin
       begin
+        img = get_image
         open(cache_tmp, "w") { |t|
-          t << get_image
+          t << img
         }
       rescue Rinda::RequestExpiredError
         if !File.exists?(cache_path)
@@ -278,9 +282,7 @@ class MozShotCGI
         #opt[:force_nocache] = true
       end
       begin
-        if File.zero? cache_tmp
-          File.unlink(cache_tmp)
-        else
+        if !File.zero?(cache_tmp)
           File.rename(cache_tmp, cache_path) 
         end
       rescue Errno::ENOENT
@@ -333,7 +335,7 @@ class MozShotCGI
       q[:opt] ||= lopt
     end
 
-    image = request_screenshot(qid, args, (opt[:shot_background] ? 3 : nil))
+    image = request_screenshot(qid, args, (opt[:shot_background] ? opt[:background_wait] : nil))
     lopt[:effect] and image = do_effect(image)
     image
   end
@@ -364,7 +366,7 @@ class MozShotCGI
     ret = nil
     args[:timestamp]  = Time.now
     args[:cache_name] = cache_name
-    request_queued?(qid) or
+    timeout.nil? || !request_queued?(qid) and
       ts.write [:req, qid, :shot_buf, args],
                Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
     if timeout.nil?
