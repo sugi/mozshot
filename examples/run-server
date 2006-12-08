@@ -10,6 +10,7 @@ export TMP="$TEMP"
 export XAUTHORITY=
 
 ulimit -c unlimited
+ulimit -v 512000
 
 Xvfb :$displayno -nolisten tcp -screen 0 2048x2048x16 > /dev/null &
 
