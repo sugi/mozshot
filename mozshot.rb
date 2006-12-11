@@ -258,7 +258,7 @@ if __FILE__ == $0
       ms.cleanup
       STDOUT.flush
       i += 1
-      if i > 10
+      if i > 20
         puts "max request exceeded, exitting..."
 	STDOUT.flush
 	#Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }

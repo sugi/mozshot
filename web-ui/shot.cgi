@@ -17,7 +17,7 @@ class MozShotCGI
   class Request
     def initialize(cgi = nil)
       @uri = nil
-      @opt = {:imgsize => [128, 128], :winsize => [1100, 1100], :retry => 1,
+      @opt = {:imgsize => [128, 128], :winsize => [1100, 1100], :retry => 2,
               :effect => true, :timeout => 10, :shot_timeouted => true}
       cgi and read_cgireq(cgi)
     end
@@ -89,7 +89,7 @@ class MozShotCGI
   require 'digest/md5'
   require 'time'
 
-  ALLOW_URI_PATTERN = %r{^(https?://(?!(localhost|127\.0\.0\.1))|about:)};
+  ALLOW_URI_PATTERN = %r{^(https?://(?!(localhost(\.?/?$|\.localdomain)|127\.0\.0\.1))|about:)};
 
   def initialize(opt = {})
     @opt = {
@@ -330,7 +330,7 @@ class MozShotCGI
     end
     
     queue.transaction do |q|
-      qid = (q[:qid] ||= "#{$$}.#{args.__id__}")
+      qid = (q[:qid] ||= cache_name)
       q[:req] ||= req
       q[:opt] ||= lopt
     end
