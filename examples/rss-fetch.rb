@@ -72,6 +72,7 @@ class RSSFetcher
         str = e.failed.to_s[1..-1]
       end
     end
+    ret.delete!("\x0b") # rexml can't parse some asci...?
     ret
   end
 end

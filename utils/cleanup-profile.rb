@@ -32,6 +32,8 @@ ARGV.each { |p|
     FileUtils.rm_rf(p)
     puts "cleanup: #{p}"
     begin
+      Process.kill(:SEGV, File.basename(p).sub(/^proc-/, '').to_i)
+      sleep 1
       Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
     rescue Errno::ESRCH
       # ignore

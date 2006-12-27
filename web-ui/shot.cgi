@@ -330,7 +330,7 @@ class MozShotCGI
     end
     
     queue.transaction do |q|
-      qid = (q[:qid] ||= cache_name)
+      qid = (q[:qid] ||= "#{$$}@#{Time.now.to_i.to_s}%#{cache_name}")
       q[:req] ||= req
       q[:opt] ||= lopt
     end
