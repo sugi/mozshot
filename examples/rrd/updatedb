@@ -1,0 +1,20 @@
+#!/usr/bin/ruby
+
+require 'drb'
+
+if ARGV.length < 1
+end
+
+
+DRb.start_service('drbunix:')
+ts = DRbObject.new_with_uri(ARGV[0])
+
+r = nil
+loop {
+  r = ts.read_all([nil, nil, nil, nil])
+  stat = Hash.new(0)
+  r.each {|i| stat[i[2]] += 1 }
+  system "rrdtool update tuple-stat.rrd 'N:#{stat[:accept]}:#{stat[:shot_buf]}:#{stat[:success]}'"
+  sleep 10
+}
+

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+LANG=C
+LC_ALL=$LANG
+export LANG LC_ALL
+
+function gengraph() {
+    opt="DEF:acc_avg=$1:accept:AVERAGE \
+        DEF:req_avg=$1:request:AVERAGE \
+        DEF:suc_avg=$1:success:AVERAGE \
+        DEF:acc_max=$1:accept:MAX \
+        DEF:req_max=$1:request:MAX \
+        DEF:suc_max=$1:success:MAX \
+        'AREA:req_avg#FF6666:request' \
+	'GPRINT:req_avg:AVERAGE:(avg\:%5.2lf' \
+	'GPRINT:req_avg:MAX:max\:%3.0lf)\n' \
+        'STACK:suc_avg#6666FF:success' \
+	'GPRINT:suc_avg:AVERAGE:(avg\:%5.2lf' \
+	'GPRINT:suc_avg:MAX:max\:%3.0lf)\n' \
+        'STACK:acc_avg#66FF66:accept' \
+	'GPRINT:acc_avg:AVERAGE:(avg\:%5.2lf' \
+	'GPRINT:acc_avg:MAX:max\:%3.0lf)\n' "
+    if [ "$3" -gt 10800 ]; then
+	opt="$opt \
+            'LINE1:req_max#FF0000:request max' \
+            'LINE1:suc_max#0000FF:success max' "
+    fi
+    eval "rrdtool graph '$2' -l 0 -s -$3 --title '# of Tuples for ${span} sec' $opt"
+}
+
+for span in 1800 10800 86400 1814400; do
+    gengraph tuple-stat.rrd tuple-stat_$span.png $span
+done

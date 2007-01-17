@@ -1,0 +1,14 @@
+#!/bin/sh
+
+rrdtool create tuple-stat.rrd --step 10 \
+DS:accept:GAUGE:60:0:U \
+DS:request:GAUGE:60:0:U \
+DS:success:GAUGE:60:0:U \
+RRA:AVERAGE:0.3:1:1800 \
+RRA:AVERAGE:0.5:180:192 \
+RRA:AVERAGE:0.5:360:336 \
+RRA:AVERAGE:0.5:1080:240 \
+RRA:MAX:0.3:1:1800 \
+RRA:MAX:0.5:30:576 \
+RRA:MAX:0.5:360:336 \
+RRA:MAX:0.5:1080:240
