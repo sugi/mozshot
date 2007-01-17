@@ -189,7 +189,7 @@ class MozShot
 
   def cleanup
     @moz and @moz.location = "about:blank"
-    GC.start
+    #GC.start
   end
 
   def shutdown
