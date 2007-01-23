@@ -96,7 +96,7 @@ class MozShotCGI
       :drburi        => "drbunix:drbsock",
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
-      :cache_expire  => 10800,
+      :cache_expire  => 12 * 60 * 60,
       :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
@@ -271,10 +271,15 @@ class MozShotCGI
         open(cache_tmp, "w") { |t|
           t << img
         }
-      rescue Rinda::RequestExpiredError
+      rescue Rinda::RequestExpiredError, DRb::DRbConnError => e
         if !File.exists?(cache_path)
           open(cache_tmp, "w") { |c|
-            c << get_waitimage
+            if Rinda::RequestExpiredError === e
+              c << get_waitimage
+            else
+              c << get_failimage
+              STDERR.puts e.inspect
+            end
           }
           File.utime(0, 0, cache_tmp)
         end
@@ -311,6 +316,13 @@ class MozShotCGI
   def get_waitimage
     lopt = gen_actual_reqopt
     image = waitimage(*lopt[:imgsize])
+    lopt[:effect] and image = do_effect(image)
+    image
+  end
+
+  def get_failimage
+    lopt = gen_actual_reqopt
+    image = failimage(*lopt[:imgsize])
     lopt[:effect] and image = do_effect(image)
     image
   end
