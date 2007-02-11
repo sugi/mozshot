@@ -9,13 +9,13 @@ ts = DRbObject.new_with_uri("drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock")
 
 ARGV.each_with_index {|uri, i|
   print "Sending request for #{uri}..."
-  ts.write [:req, $$, uri.__id__, :shot_file, {:uri => uri, :filename => "shot#{$$}-#{i}.png"}], Rinda::SimpleRenewer.new(30)
+  ts.write [:req, $$, :shot_file, {:uri => uri, :filename => "shot#{$$}-#{i}.png"}], Rinda::SimpleRenewer.new(30)
   puts "done."
   print "Waiting for result..."
   ret = ts.take [:ret, $$, uri.__id__, nil, nil]
-  if ret[3] == :success
-    puts "done. screenshot was saved in #{ret[4]}"
+  if ret[2] == :success
+    puts "done. screenshot was saved in #{ret[3]}"
   else
-    puts "fail! #{ret[4]}"
+    puts "fail! #{ret[3]}"
   end
 }

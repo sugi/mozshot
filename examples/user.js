@@ -1,9 +1,18 @@
 
 # disable dialog for HTTPS pages
 user_pref("security.warn_entering_secure", false);
+user_pref("security.warn_entering_secure.show_once", false);
 user_pref("security.warn_entering_weak", false);
 user_pref("security.warn_leaving_secure", false);
+user_pref("security.warn_leaving_secure.show_once", false);
 user_pref("security.warn_viewing_mixed", false)
+user_pref("security.warn_viewing_mixed.show_once", false);
+
+# tweak for infomation store
+user_pref("network.cookie.lifetimePolicy", 2);
+user_pref("browser.download.manager.retention", 0);
+user_pref("browser.formfill.enable", false);
+user_pref("browser.history_expire_days", 0);
 
 # Tune for Japanese
 user_pref("intl.accept_languages", "ja, en-us, en");
