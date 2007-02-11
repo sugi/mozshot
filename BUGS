@@ -1,0 +1,5 @@
+= BUGS
+== Critical
+ * Dead lock with 
+   "GLib-WARNING **:g_main_context_prepare(): main loop already active in another thread"
+ * memory leak (?)
