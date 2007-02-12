@@ -64,12 +64,20 @@ class MozShot
     end
     Gtk.init
     Gtk::MozEmbed.set_profile_path opt[:mozprofdir], @mozprof
-    @gtkthread = Thread.new { Gtk.main }
+    @gtkthread = nil
   end
-  attr_accessor :opt, :gtkthread, :mozprof
+  attr_accessor :opt, :mozprof
+
+  def run
+    if Thread.main != Thread.current
+      puts "WARNING: Gtk.main was called in not main thread. This may cause deadlock."
+    end
+    @gtkthread = Thread.current
+    Gtk.main
+  end
 
   def join
-    @gtkthread.join
+    !@gtkthread.nil? and @gtkthread != Thread.current and @gtkthread.join
   end
 
   def renew_mozwin(useropt = {})
@@ -208,66 +216,71 @@ if __FILE__ == $0
   if ARGV.length == 0 && !ENV["MOZSHOT_RUN_AS_DAEMON"] # TODO: Change name to MOZSHOT_DAEMON_SOCK
     puts "Usage: $0 <URL> [outputfile (default='mozshot.png')]"
   elsif ENV["MOZSHOT_RUN_AS_DAEMON"]
-    require 'drb'
-    require 'rinda/rinda'
-    sockpath = ms.mozprof == 'default' ? '' : "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
-    begin
-      File.unlink sockpath
-    rescue Errno::ENOENT
-      # ignore
-    end
-    DRb.start_service("drbunix:#{sockpath}", ms)
-    tsuri = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
-    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
-    ms.renew_mozwin
-    i = 0
-    loop {
-      puts "waiting for request..."
-      req = ts.take [:req, nil, Symbol, Hash]
-      ts.write [:stat, req[1], :accept, {:pid => $$, :display => ENV['DISPLAY'], :timestamp => Time.now}], 600
-      puts "took request ##{i}: #{req.inspect}"
+    Thread.new { 
+      Thread.pass
+      require 'drb'
+      require 'rinda/rinda'
+      sockpath = ms.mozprof == 'default' ? '' : "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
       begin
-        if req[2] == :shot_buf
-          buf = ms.screenshot(req[3][:uri], req[3][:opt]||{})
-	  buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
-          ts.write([:ret, req[1], :success, {:image => buf, :req => req[3], :timestamp => Time.now}], 300)
-        elsif req[2] == :shot_file
-          filename = ms.screenshot_file(req[3][:uri], req[3][:filename],
-                                        req[3][:opt]||{})
-	  filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
-          ts.write [:ret, req[1], :success, {:filename => filename, :req => req[3], :timestamp => Time.now}], 300
-        #elsif req[2] == :shutdown
-        #  ts.write [:ret, req[1], :accept, "going shutdown"]
-        #  puts "shutdown request was accepted, going shutdown."
-        #  break
-        else
-          raise "Unknown request"
-        end
-      rescue MozShot::InternalError => e
-        ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
-        #raise e
-	exit!
-      rescue Timeout::Error, StandardError => e
-        ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
-      end
-      begin
-        ts.take [:stat, req[1], nil, nil], 0
-      rescue Rinda::RequestExpiredError
+	File.unlink sockpath
+      rescue Errno::ENOENT
 	# ignore
       end
-      ms.cleanup
-      STDOUT.flush
-      i += 1
-      if i > 20
-        puts "max request exceeded, exitting..."
+      DRb.start_service("drbunix:#{sockpath}", ms)
+      tsuri = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
+      ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
+      ms.renew_mozwin
+      i = 0
+      loop {
+	puts "waiting for request..."
+	req = ts.take [:req, nil, Symbol, Hash]
+	ts.write [:stat, req[1], :accept, {:pid => $$, :display => ENV['DISPLAY'], :timestamp => Time.now}], 600
+	puts "took request ##{i}: #{req.inspect}"
+	begin
+	  if req[2] == :shot_buf
+	    buf = ms.screenshot(req[3][:uri], req[3][:opt]||{})
+	    buf or raise "[BUG] Unknown Error: screenshot() returned #{buf.inspect}"
+	    ts.write([:ret, req[1], :success, {:image => buf, :req => req[3], :timestamp => Time.now}], 300)
+	  elsif req[2] == :shot_file
+	    filename = ms.screenshot_file(req[3][:uri], req[3][:filename],
+					  req[3][:opt]||{})
+	    filename or raise "[BUG] Unknown Error: screenshot_file() returned #{filename.inspect}"
+	    ts.write [:ret, req[1], :success, {:filename => filename, :req => req[3], :timestamp => Time.now}], 300
+	    #elsif req[2] == :shutdown
+	    #  ts.write [:ret, req[1], :accept, "going shutdown"]
+	    #  puts "shutdown request was accepted, going shutdown."
+	    #  break
+	  else
+	    raise "Unknown request"
+	  end
+	rescue MozShot::InternalError => e
+	  ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
+	  #raise e
+	  exit!
+	rescue Timeout::Error, StandardError => e
+	  ts.write [:ret, req[1], :error, {:err => e, :req => req[3], :timestamp => Time.now}], 3600
+	end
+	begin
+	  ts.take [:stat, req[1], nil, nil], 0
+	rescue Rinda::RequestExpiredError
+	  # ignore
+	end
+	ms.cleanup
 	STDOUT.flush
-	#Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }
-        #break
-	ms.shutdown # Hmmm....
-	exit!
-      end
+	i += 1
+	if i > 20
+	  puts "max request exceeded, exitting..."
+	  STDOUT.flush
+	  #Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }
+	  #break
+	  ms.shutdown # Hmmm....
+	  exit!
+	end
+      }
     }
+    ms.run
   else
+    Thread.new { ms.run }
     ms.screenshot_file ARGV[0], (ARGV[1]|| "mozshot.png")
   end
   ms.shutdown
