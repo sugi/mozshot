@@ -12,9 +12,9 @@ ARGV.each_with_index {|uri, i|
   ts.write [:req, $$, :shot_file, {:uri => uri, :filename => "shot#{$$}-#{i}.png"}], Rinda::SimpleRenewer.new(30)
   puts "done."
   print "Waiting for result..."
-  ret = ts.take [:ret, $$, uri.__id__, nil, nil]
+  ret = ts.take [:ret, $$, nil, nil]
   if ret[2] == :success
-    puts "done. screenshot was saved in #{ret[3]}"
+    puts "done. screenshot was saved in #{ret[3][:filename]}"
   else
     puts "fail! #{ret[3]}"
   end
