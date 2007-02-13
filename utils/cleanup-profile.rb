@@ -7,7 +7,7 @@ require 'drb'
 require 'timeout'
 
 ARGV.each { |p|
-  File.directory? "#{p}/Cache" or next
+  #File.directory? "#{p}/Cache" or next
   begin
     UNIXSocket.open("#{p}/drbsock").close
     puts "ok: #{p}"
@@ -17,7 +17,7 @@ ARGV.each { |p|
         timeout(30) {
 	  puts drb.inspect
 	  puts drb.to_s
-	  drb.screenshot("about:blank")
+	  puts drb.ping.inspect
         }
       rescue Timeout::Error
 	puts "killing: #{p}"

@@ -199,6 +199,12 @@ class MozShot
     end
     join
   end
+
+  def ping
+    @mutex[:shot].synchronize {
+      true
+    }
+  end
 end
 
 
@@ -260,7 +266,8 @@ if __FILE__ == $0
       i += 1
       if i > 20
         puts "max request exceeded, exitting..."
-	STDOUT.flush
+	$stdout.flush
+	DRb.stop_service
 	#Thread.new{ sleep 3; puts "shutdown timeouted!"; exit! }
         #break
 	ms.shutdown # Hmmm....
