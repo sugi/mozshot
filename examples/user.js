@@ -5,7 +5,7 @@ user_pref("security.warn_entering_secure.show_once", false);
 user_pref("security.warn_entering_weak", false);
 user_pref("security.warn_leaving_secure", false);
 user_pref("security.warn_leaving_secure.show_once", false);
-user_pref("security.warn_viewing_mixed", false)
+user_pref("security.warn_viewing_mixed", false);
 user_pref("security.warn_viewing_mixed.show_once", false);
 
 # tweak for infomation store
@@ -30,5 +30,5 @@ user_pref("network.http.pipelining.firstrequest", true);
 user_pref("network.http.pipelining.maxrequests", 8);
 
 # save mem
-user_pref("browser.sessionhistory.max_total_viewers", 0)
-user_pref("browser.cache.memory.capacity", 2048)
+user_pref("browser.sessionhistory.max_total_viewers", 0);
+user_pref("browser.cache.memory.capacity", 2048);
