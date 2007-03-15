@@ -253,6 +253,7 @@ class MozShotCGI
 
     begin
       st = File.stat(cache_path)
+      #if st.size != 0 &&
       if st.size != 0 && cgi.params['nocache'][0] != 'true' &&
           (st.mtime.to_i + opt[:cache_expire] > Time.now.to_i || run_other_queue && opt[:shot_background])
         return cache_file
@@ -267,7 +268,11 @@ class MozShotCGI
 
     begin
       begin
-        img = get_image
+        img = add_metadata get_image, {
+          'OriginalURI' => req.uri,
+          'WindowSize' => "#{req.opt[:winsize].join('x')}",
+          'Timestamp' => Time.now.to_i
+        }
         open(cache_tmp, "w") { |t|
           t << img
         }
@@ -445,6 +450,15 @@ class MozShotCGI
     shadow.background_color = '#FEFEFE'
     shadow.composite!(timg, Magick::CenterGravity, Magick::OverCompositeOp)
     shadow.to_blob
+  end
+
+  def add_metadata(image, hash = {})
+    img = Magick::Image.from_blob(image)[0]
+    img['Software'] = 'MozShot (http://mozshot.nemui.org/)'
+    hash.each { |k, v|
+      img["MozShot::#{k}"] = v.to_s
+    }
+    img.to_blob
   end
 end
 
