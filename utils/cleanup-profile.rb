@@ -21,7 +21,13 @@ ARGV.each { |p|
         }
       rescue Timeout::Error
 	puts "killing: #{p}"
-	Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
+	begin
+	  Process.kill(:SEGV, File.basename(p).sub(/^proc-/, '').to_i)
+	  sleep 1
+	  Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
+	rescue Errno::ESRCH
+	  # ignore
+	end
 	FileUtils.rm_rf(p)
       rescue NoMethodError => e
 	STDERR.puts "wierd profile: #{p}; #{e.inspect}"
@@ -32,8 +38,6 @@ ARGV.each { |p|
     FileUtils.rm_rf(p)
     puts "cleanup: #{p}"
     begin
-      Process.kill(:SEGV, File.basename(p).sub(/^proc-/, '').to_i)
-      sleep 1
       Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
     rescue Errno::ESRCH
       # ignore
