@@ -211,9 +211,9 @@ end
 if __FILE__ == $0
   ms = MozShot.new
 
-  if ARGV.length == 0 && !ENV["MOZSHOT_RUN_AS_DAEMON"] # TODO: Change name to MOZSHOT_DAEMON_SOCK
+  if ARGV.length == 0 && !ENV["MOZSHOT_DAEMON_SOCK"]
     puts "Usage: $0 <URL> [outputfile (default='mozshot.png')]"
-  elsif ENV["MOZSHOT_RUN_AS_DAEMON"]
+  elsif ENV["MOZSHOT_DAEMON_SOCK"]
     require 'drb'
     require 'rinda/rinda'
     sockpath = ms.mozprof == 'default' ? '' : "#{ms.opt[:mozprofdir]}/#{ms.mozprof}/drbsock"
@@ -223,8 +223,9 @@ if __FILE__ == $0
       # ignore
     end
     DRb.start_service("drbunix:#{sockpath}", ms)
-    tsuri = "drbunix:#{ENV['HOME']}/.mozilla/mozshot/drbsock" # TODO: pick the path from value of environment
-    ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
+    tsuri = ENV["MOZSHOT_DAEMON_SOCK"]
+    #ts = Rinda::TupleSpaceProxy.new(DRbObject.new_with_uri(tsuri))
+    ts = DRbObject.new_with_uri(tsuri)
     ms.renew_mozwin
     i = 0
     loop {
