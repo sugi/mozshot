@@ -89,7 +89,7 @@ class MozShotCGI
   require 'digest/md5'
   require 'time'
 
-  ALLOW_URI_PATTERN = %r{^(https?://(?!(localhost(\.?/?$|\.localdomain)|127\.0\.0\.1))|about:)};
+  ALLOW_URI_PATTERN = %r{^(https?://(?!(localhost(\.?/?$|\.localdomain)|127\.0\.0\.1))[^.]+\.[^.]|about:)}
 
   def initialize(opt = {})
     @opt = {
