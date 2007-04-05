@@ -34,7 +34,7 @@ ARGV.each { |p|
 	puts "wierd profile: #{p}; #{e.inspect}"
       end
     end
-  rescue Errno::ECONNREFUSED, Errno::ENOENT
+  rescue Errno::ECONNREFUSED, Errno::ENOENT, DRb::DRbConnError
     FileUtils.rm_rf(p)
     puts "cleanup: #{p}"
     begin
