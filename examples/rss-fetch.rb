@@ -19,7 +19,7 @@ class RSSFetcher
     @opt.update option
     @fetched_p = false
     FileUtils.mkpath(@opt[:cache_dir]) unless File.directory? @opt[:cache_dir]
-    @cache = PStore.new("#{@opt[:cache_dir]}/#{Digest::MD5.new(uri)}")
+    @cache = PStore.new("#{@opt[:cache_dir]}/#{Digest::MD5.hexdigest(uri)}")
     @rss = nil
   end
 

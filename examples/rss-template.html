@@ -8,10 +8,10 @@
 	 width="128" height="128" />
   </a>
   <a href="<%= item.link %>">
-    <%= item.title %>
+    <%= item.title.to_s.gsub(/<.*?>/, '') %>
   </a>
   <p>
-    <%= item.description %>
+    <%= item.description.to_s.gsub(/<.*?>/ms, '') %>
   </p>
 </div>
 <% } %>
