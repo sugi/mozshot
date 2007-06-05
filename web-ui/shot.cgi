@@ -264,15 +264,19 @@ class MozShotCGI
       # ignore
     end
 
-    File.directory? cache_base or Dir.mkdir(cache_base)
+    begin
+      File.directory? cache_base or Dir.mkdir(cache_base)
+    rescue Errno::EEXIST
+      # ignore
+    end
 
     begin
+      metadata = {
+        'OriginalURI' => req.uri,
+        'Timestamp'   => Time.now.to_i
+      }
       begin
-        img = add_metadata get_image, {
-          'OriginalURI' => req.uri,
-          'WindowSize' => "#{req.opt[:winsize].join('x')}",
-          'Timestamp' => Time.now.to_i
-        }
+        img = add_metadata(get_image, metadata)
         open(cache_tmp, "w") { |t|
           t << img
         }
@@ -280,9 +284,9 @@ class MozShotCGI
         if !File.exists?(cache_path)
           open(cache_tmp, "w") { |c|
             if Rinda::RequestExpiredError === e
-              c << get_waitimage
+              c << add_metadata(get_waitimage, metadata)
             else
-              c << get_failimage
+              c << add_metadata(get_failimage, metadata)
               STDERR.puts e.inspect
             end
           }

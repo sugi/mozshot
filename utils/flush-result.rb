@@ -11,15 +11,28 @@ ts = DRbObject.new_with_uri(ARGV[0])
 
 r = ts.read_all([:ret, nil, nil, nil])
 r.each {|i|
+  cur = nil
   begin
-    ts.take([i[0..2], nil].flatten, 0)
+    cur = ts.take([i[0..2], nil].flatten, 0) or next
   rescue Rinda::RequestExpiredError
     next
   end
   shot = MozShotCGI.new
-  shot.cache_name = i[3][:req][:cache_name]
-  image = i[3][:image]
-  if i[3][:req] && i[3][:req][:opt][:effect]
+  ret = cur[3] or next
+  shot.cache_name = ret[:req][:cache_name]
+  metadata = {
+      'Timestamp'   => ret[:timestamp].to_i,
+      'OriginalURI' => ret[:req][:uri]
+  }
+  image = Magick::Image.from_blob(ret[:image])[0]
+  if image.number_colors == 1
+    ret.delete(:image)
+    msg = "drop(single color): #{ret.inspect}"
+    STDERR.puts "drop(single color): #{ret.inspect}"
+    next
+  end
+  image = shot.add_metadata(ret[:image], metadata)
+  if ret[:req] && ret[:req][:opt][:effect]
     image = shot.do_effect(image)
   end
   open(shot.cache_path+".tmp", "w") { |t|
@@ -27,7 +40,7 @@ r.each {|i|
   }
   begin
     File.rename(shot.cache_path+".tmp", shot.cache_path)
-    puts "write: #{shot.cache_path} (#{i[3][:req][:uri]})"
+    puts "write: #{shot.cache_path} (#{ret[:req][:uri]})"
   end
 }
 
