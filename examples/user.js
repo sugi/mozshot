@@ -1,3 +1,4 @@
+user_pref("general.useragent.override", "Mozilla/5.0 (compatible; Mozshot/0.0.20070628; http://mozshot.nemui.org/)");
 
 # disable dialog for HTTPS pages
 user_pref("security.warn_entering_secure", false);
@@ -23,7 +24,7 @@ user_pref("intl.charset.detector", "ja_parallel_state_machine");
 user_pref("javascript.enabled", false);
 
 # speed tune...
-user_pref("nglayout.initialpaint.delay", 50);
+user_pref("nglayout.initialpaint.delay", 250);
 user_pref("network.http.max-connections", 45);
 user_pref("network.http.pipelining", true);
 user_pref("network.http.pipelining.firstrequest", true);
@@ -32,3 +33,9 @@ user_pref("network.http.pipelining.maxrequests", 8);
 # save mem
 user_pref("browser.sessionhistory.max_total_viewers", 0);
 user_pref("browser.cache.memory.capacity", 2048);
+
+# proxy
+#user_pref("network.proxy.type", 1);
+#user_pref("network.proxy.http", "localhost");
+#user_pref("network.proxy.http_port", 3128);
+#user_pref("network.http.proxy.pipelining", true);
