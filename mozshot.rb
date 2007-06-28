@@ -73,15 +73,14 @@ class MozShot
   end
 
   def renew_mozwin(useropt = {})
+    topt = opt.dup.merge! useropt
     @mutex[:mozwin].synchronize {
       unless @moz && @window
-        topt = opt.dup.merge! useropt
         w = Gtk::Window.new
         w.title = "MozShot -- Initalized"
         w.decorated = false
         w.has_frame = false
         w.border_width = 0
-        w.resize(topt[:winsize][0], topt[:winsize][1])
         m = Gtk::MozEmbed.new
         m.chrome_mask = Gtk::MozEmbed::ALLCHROME
         w << m
@@ -93,21 +92,15 @@ class MozShot
     }
     @window.show_all
     @window.move(0,0)
+    @window.resize(topt[:winsize][0], topt[:winsize][1])
   end
 
-  def screenshot_file(uri, filename, useropt = {})
-    File.open(filename, "w") {|f|
-      f << screenshot(uri, useropt)
-    }
-    filename
-  end
-
-  def screenshot(url, useropt = {})
+  def moz_load_url(url, useropt = {})
     shotopt = opt.dup.merge! useropt
     q = Queue.new
-    pixbuf = nil
-    @mutex[:shot].synchronize {
+    @mutex[:load].synchronize {
       renew_mozwin(shotopt)
+      @moz.stop_load
       sig_handle_net   = set_sig_handler("net_stop", q)
       sig_handle_title = set_sig_handler("title", q)
 
@@ -143,7 +136,22 @@ class MozShot
       end
       @moz.signal_handler_disconnect(sig_handle_net)
       @moz.signal_handler_disconnect(sig_handle_title)
-      sleep 0.3
+    }
+  end
+
+  def screenshot_file(uri, filename, useropt = {})
+    File.open(filename, "w") {|f|
+      f << screenshot(uri, useropt)
+    }
+    filename
+  end
+
+  def screenshot(url, useropt = {})
+    shotopt = opt.dup.merge! useropt
+    pixbuf = nil
+    @mutex[:shot].synchronize {
+      moz_load_url(url, shotopt)
+      sleep 0.2
       pixbuf = getpixbuf(@moz.window, shotopt)
     }
 
@@ -188,7 +196,7 @@ class MozShot
   end
 
   def cleanup
-    @moz and @moz.location = "about:blank"
+    @moz and moz_load_url("about:blank")
     #GC.start
   end
 
