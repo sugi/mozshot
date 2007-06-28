@@ -89,7 +89,8 @@ class MozShotCGI
   require 'digest/md5'
   require 'time'
 
-  ALLOW_URI_PATTERN = %r{^(https?://(?!(localhost(\.?/?$|\.localdomain)|127\.0\.0\.1))[^.]+\.[^.]|about:)}
+  DENY_URI_PATTERN  = %r{^https?://(localhost(\.?/?$|\.localdomain)|127\.0\.0\.1|pagead2\.googlesyndication|www\.googleadservices)}
+  ALLOW_URI_PATTERN = %r{^(https?://[^.]+\.[^.]|about:)}
 
   def initialize(opt = {})
     @opt = {
@@ -372,8 +373,10 @@ class MozShotCGI
   end
 
   def request_screenshot(qid, args, timeout = nil)
-    if args[:uri].nil? || args[:uri].empty? || args[:uri] !~ ALLOW_URI_PATTERN
+    if args[:uri].nil? || args[:uri].empty?
       raise Invalid, "Invalid URI."
+    elsif args[:uri] =~ DENY_URI_PATTERN || args[:uri] !~ ALLOW_URI_PATTERN
+      raise Invalid, "Targegt URI denied."
     elsif args[:opt][:winsize] &&
       (args[:opt][:winsize][0] < 100 || args[:opt][:winsize][1] < 100 ||
        args[:opt][:winsize][0] > 3000 || args[:opt][:winsize][1] > 3000)
