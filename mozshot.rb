@@ -144,7 +144,7 @@ class MozShot
       @moz.signal_handler_disconnect(sig_handle_net)
       @moz.signal_handler_disconnect(sig_handle_title)
       sleep 0.3
-      pixbuf = getpixbuf(@window.child.parent_window, shotopt)
+      pixbuf = getpixbuf(@moz.window, shotopt)
     }
 
     if shotopt[:imgsize] && !shotopt[:imgsize].empty? &&
@@ -272,7 +272,7 @@ if __FILE__ == $0
       ms.cleanup
       STDOUT.flush
       i += 1
-      if i > 20
+      if i > 60
         puts "max request exceeded, exitting..."
 	$stdout.flush
 	DRb.stop_service
