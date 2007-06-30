@@ -3,4 +3,5 @@
 require 'gettext/rails'
 class ApplicationController < ActionController::Base
   init_gettext "mozshot"
+  session :disabled => true
 end

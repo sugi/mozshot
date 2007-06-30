@@ -8,9 +8,6 @@ $KCODE = 'u'
 # ENV['RAILS_ENV'] ||= 'production'
 
 
-# disable session
-::ActionController::CgiRequest::DEFAULT_SESSION_OPTIONS = false
-
 # Specifies gem version of Rails to use when vendor/rails is not present
 RAILS_GEM_VERSION = '1.1.2'
 
