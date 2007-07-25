@@ -8,10 +8,11 @@ elif [ "$DISPLAY" = ":0.0" ]; then
   exit 1
 fi
 
-export TEMP=/tmp/mozshot
-export TMP=/tmp/mozshot
-export MOZSHOT_DAEMON_SOCK=druby://desire.arege.jp:7524
-export MOZILLA_FIVE_HOME=/usr/lib/xulrunner
+TEMP=/tmp/mozshot
+TMP=/tmp/mozshot
+: ${MOZSHOT_DAEMON_SOCK:=druby://localhost:7524}
+: ${MOZILLA_FIVE_HOME=/usr/lib/xulrunner}
+export MOZILLA_FIVE_HOME MOZSHOT_DAEMON_SOCK TEMP TMP
 unset XAUTHORITY
 unset GNOME_KEYRING_SOCKET
 unset SESSION_MANAGER
