@@ -217,6 +217,7 @@ end
 
 
 if __FILE__ == $0
+  $0 = "#{File.basename(__FILE__, '.rb') } #{ENV['DISPLAY']}"
   ms = MozShot.new
 
   if ARGV.length == 0 && !ENV["MOZSHOT_DAEMON_SOCK"]
