@@ -10,7 +10,7 @@ fi
 
 TEMP=/tmp/mozshot
 TMP=/tmp/mozshot
-: ${MOZSHOT_DAEMON_SOCK:=druby://localhost:7524}
+: ${MOZSHOT_DAEMON_SOCK:=druby://:7524}
 : ${MOZILLA_FIVE_HOME=/usr/lib/xulrunner}
 export MOZILLA_FIVE_HOME MOZSHOT_DAEMON_SOCK TEMP TMP
 unset XAUTHORITY
@@ -22,6 +22,9 @@ unset GNOME_KEYRING_SOCKET
 unset GPG_AGENT_INFO
 unset GTK_IM_MODULE
 unset XMODIFIERS
+
+ulimit -c unlimited
+ulimit -v 512000
 
 if test -z "$1"; then
   id=${DISPLAY#:}

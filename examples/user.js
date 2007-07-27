@@ -1,4 +1,4 @@
-user_pref("general.useragent.override", "Mozilla/5.0 (compatible; Mozshot/0.0.20070628; http://mozshot.nemui.org/)");
+user_pref("general.useragent.override", "Mozilla/5.0 (Gecko/20070310 Mozshot/0.0.20070628; http://mozshot.nemui.org/)");
 
 # disable dialog for HTTPS pages
 user_pref("security.warn_entering_secure", false);
@@ -22,6 +22,12 @@ user_pref("intl.charset.detector", "ja_parallel_state_machine");
 
 # disable javascript...
 user_pref("javascript.enabled", false);
+
+# disable default plugin
+user_pref("plugin.default_plugin_disabled", true);
+
+# disable netscape style plugin scan
+user_pref("plugin.scan.4xPluginFolder", false);
 
 # speed tune...
 user_pref("nglayout.initialpaint.delay", 250);
