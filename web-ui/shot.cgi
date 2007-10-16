@@ -94,7 +94,7 @@ class MozShotCGI
 
   def initialize(opt = {})
     @opt = {
-      :drburi        => "drbunix:drbsock",
+      :drburi        => "druby://:7524",
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
       :cache_expire  => 12 * 60 * 60,
@@ -136,6 +136,7 @@ class MozShotCGI
 
   def cache_name
     @cache_name and return @cache_name
+    req.uri.nil? || req.uri.empty? and raise Invalid, "Invalid URI."
     @cache_name  = Digest::MD5.hexdigest([req.opt[:winsize],
                                           req.opt[:imgsize],
                                           req.opt[:effect],
@@ -390,15 +391,20 @@ class MozShotCGI
     ret = nil
     args[:timestamp]  = Time.now
     args[:cache_name] = cache_name
-    timeout.nil? || !request_queued?(qid) and
-      ts.write [:req, qid, :shot_buf, args],
-               Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
+    if timeout.nil? || !request_queued?(qid)
+      timeout(1) { # connect timeout
+        ts.write [:req, qid, :shot_buf, args],
+                  Rinda::SimpleRenewer.new(args[:opt][:timeout]*(args[:opt][:retry]+1)*2)
+      }
+    end
     if timeout.nil?
       ret = ts.take([:ret, qid, nil, nil], nil)
     else
       t = timeout.to_f
       begin
-        ret = ts.take([:ret, qid, nil, nil], 0)
+        timeout(1) { # connect timeout
+          ret = ts.take([:ret, qid, nil, nil], 0)
+        }
       rescue Rinda::RequestExpiredError
         if t > 0
           sleep 0.2
