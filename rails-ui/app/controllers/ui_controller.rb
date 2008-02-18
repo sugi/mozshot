@@ -23,12 +23,12 @@ class UiController < ApplicationController
 
   def advanced
     set_param
-    param = @params[:param] || {}
+    param = params[:param] || {}
     if @uri
       @image_uri = @shotbase + '?' + param.map{|p| p.map{|v| CGI.escape v }.join('=') }.join(';')
     else
-      @params[:param][:keepratio] = 'true'
-      # @params[:param][:effect]    = 'true'
+      params[:param][:keepratio] = 'true'
+      # params[:param][:effect]    = 'true'
     end
   end
 
@@ -36,11 +36,11 @@ class UiController < ApplicationController
   def set_param
     #@shotbase = "http://#{request.host_with_port}/shot"
     @shotbase = "http://mozshot.nemui.org/shot"
-    if @params[:param].nil? || @params[:param][:uri].nil?
-      @params[:param] ||= Hash.new
-      @params[:param][:uri] = "http://www.mozilla.org/"
+    if params[:param].nil? || params[:param][:uri].nil?
+      params[:param] ||= Hash.new
+      params[:param][:uri] = "http://www.mozilla.org/"
     else
-      @uri = CGI.escapeHTML @params[:param][:uri]
+      @uri = CGI.escapeHTML params[:param][:uri]
     end
   end
 end

@@ -9,22 +9,22 @@
 ' %>
 
 <%= start_form_tag({:action => 'advanced'}, {:class => 'advancedui'}) %>
-<%= text_field 'param', 'uri', :size => 80, :value => @params[:param] && @params[:param][:uri] %>
+<%= text_field 'param', 'uri', :size => 80, :value => params[:param] && params[:param][:uri] %>
 
 Window Size:
-<%= text_field 'param', 'win_x', :size => 4, :value => @params[:param] && @params[:param][:win_x] || 1000 %>
+<%= text_field 'param', 'win_x', :size => 4, :value => params[:param] && params[:param][:win_x] || 1000 %>
 x
-<%= text_field 'param', 'win_y', :size => 4, :value => @params[:param] && @params[:param][:win_y] || 1000 %>
+<%= text_field 'param', 'win_y', :size => 4, :value => params[:param] && params[:param][:win_y] || 1000 %>
 
 Image Size:
-<%= text_field 'param', 'img_x', :size => 4, :value => @params[:param] && @params[:param][:img_x] || 600 %>
+<%= text_field 'param', 'img_x', :size => 4, :value => params[:param] && params[:param][:img_x] || 600 %>
 x
-<%= text_field 'param', 'img_y', :size => 4, :value => @params[:param] && @params[:param][:img_y] || 600 %>
+<%= text_field 'param', 'img_y', :size => 4, :value => params[:param] && params[:param][:img_y] || 600 %>
 <br />
 
 <% 
   @noresize_opt = {:onClick => 'toggle_imgsize()'}
-  @params[:param][:noresize] == 'true' and
+  params[:param][:noresize] == 'true' and
       @noresize_opt[:checked] = 'checked'
 %>
 <%= check_box 'param', 'noresize', @noresize_opt, 'true' %>No Resize
@@ -32,7 +32,7 @@ x
 &nbsp;
 <% 
   @keepratio_opt = {}
-  @params[:param][:keepratio] == 'true' and
+  params[:param][:keepratio] == 'true' and
       @keepratio_opt[:checked] = 'checked'
 %>
 <%= check_box 'param', 'keepratio', @keepratio_opt, 'true' %>Keep Ratio
@@ -40,7 +40,7 @@ x
 &nbsp;
 <% 
   @effect_opt = {}
-  @params[:param][:effect] == 'true' and
+  params[:param][:effect] == 'true' and
       @effect_opt[:checked] = 'checked'
 %>
 <%= check_box 'param', 'effect', @effect_opt, 'true', 'false' %>DropShadow
@@ -48,7 +48,7 @@ x
 &nbsp;
 <% 
   @nocache_opt = {}
-  @params[:param][:nocache] == 'true' and
+  params[:param][:nocache] == 'true' and
       @nocache_opt[:checked] = 'checked'
 %>
 <!--

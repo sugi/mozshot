@@ -17,12 +17,12 @@
 #  password:
 #  host: localhost
 
-development:
-  adapter: sqlite3
+#development:
+#  adapter: sqlite3
 #  database: ":memory:"
 
-production:
-  adapter: sqlite3
+#production:
+#  adapter: sqlite3
 #  database: ":memory:"
 
 # Warning: The database defined as 'test' will be erased and

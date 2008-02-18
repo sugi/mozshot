@@ -11,7 +11,7 @@ all source code has provided under ruby lisence</a>.
 You can refer and modifiy this source freely.
 </p>
 
-<%= start_form_tag({:action => 'simple'}, {:class => 'simpleui'}) %>
-<%= text_field 'param', 'uri', :size => 80, :value => @params[:param] && @params[:param][:uri] %>
+<%= form_tag({:action => 'simple'}, {:class => 'simpleui'}) %>
+<%= text_field 'param', 'uri', :size => 80, :value => params[:param] && params[:param][:uri] %>
 <%= submit_tag "Take ScreenShot", :id => "submit", :name => nil %>
-<%= end_form_tag %>
+</form>
