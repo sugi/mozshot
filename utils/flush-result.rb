@@ -28,25 +28,23 @@ r.each {|i|
   }
 
   if Magick::Image.from_blob(ret[:image])[0].number_colors == 1
-    ret.delete :image
-    puts "drop(single color): #{ret.inspect}"
-    if File.exists? shot.cache_path
+    puts "drop(single color): #{ret.reject{|k,v| k == :image}.inspect}"
+    if File.exists?(shot.cache_path) &&
+      Time.now.to_i < File.mtime(shot.cache_path).to_i + shot.opt[:cache_expire]
       puts "snapshot file already exists, ignore."
       next
     else
       badfile = shot.cache_path+".badmark"
       i = 0
       open(badfile, "a+") { |b|
-	i = b.read.to_i
+	i = b.read.to_i + 1
 	b.rewind
-	b << i+1
+	b << i
       }
       puts "set bad count = #{i}"
       i < 3 and next
       File.delete badfile
-      msg = "bad cound limit exceeded. writing force: #{ret[:req][:uri]}"
-      puts msg
-      $stderr.puts msg
+      puts "bad cound limit exceeded. writing force: #{ret[:req][:uri]}"
     end
   end
 
