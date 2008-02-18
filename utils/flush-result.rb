@@ -58,10 +58,14 @@ r.each {|i|
   begin
     File.rename(shot.cache_path+".tmp", shot.cache_path)
     puts "write: #{shot.cache_path} (#{ret[:req][:uri]})"
+    begin
+      File.unlink shot.cache_path + ".queued"
+    rescue Errno::ENOENT
+      # ignore
+    end
     write_count += 1
   end
 }
 puts "complete: wrote out #{write_count} images."
 
-# vim: set sw=2:
-# vim: set sts=2:
+# vim: set sw=2 sts=2 expandtab:
