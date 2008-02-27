@@ -9,6 +9,9 @@ user_pref("security.warn_leaving_secure.show_once", false);
 user_pref("security.warn_viewing_mixed", false);
 user_pref("security.warn_viewing_mixed.show_once", false);
 
+# disable IP v6
+user_pref("network.dns.disabeleIPv6", true);
+
 # tweak for infomation store
 user_pref("network.cookie.lifetimePolicy", 2);
 user_pref("browser.download.manager.retention", 0);
