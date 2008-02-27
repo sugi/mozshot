@@ -24,8 +24,8 @@ ARGV.each { |p|
 	rescue Timeout::Error
 	  puts "killing: #{p}"
 	  begin
-	    Process.kill(:SEGV, File.basename(p).sub(/^proc-/, '').to_i)
-	    sleep 1
+	    #Process.kill(:SEGV, File.basename(p).sub(/^proc-/, '').to_i)
+	    #sleep 1
 	    Process.kill(:KILL, File.basename(p).sub(/^proc-/, '').to_i)
 	  rescue Errno::ESRCH
 	    # ignore
@@ -48,7 +48,13 @@ ARGV.each { |p|
   }
 }
 
-threads.each {|t| t.join }
+threads.each {|t|
+  begin
+    t.join
+  rescue DRb::DRbBadURI => e
+    $stderr.puts "#{e.message}: #{e.backtrace.join(", ")}"
+  end
+}
 
 # vim: set sw=2:
 # vim: set sts=2:
