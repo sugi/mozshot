@@ -34,6 +34,6 @@ fi
 
 cd `dirname $0`/.. || exit 1
 while :; do
-  ruby -r timestamp.rb mozshot.rb >> ~/data/log/mozshot-${id}.log 2>&1
+  nice -n 5 ruby -r timestamp.rb mozshot.rb >> ~/data/log/mozshot-${id}.log 2>&1
   sleep 0.3
 done

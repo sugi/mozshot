@@ -22,6 +22,6 @@ bash -c 'while :; do ./ts.rb; done'&
 
 i=0
 while [ "$i" -lt "$num_server" ]; do
-  DISPLAY=":${displayno}.${i}" ./examples/run-mozshot &
+  DISPLAY=":${displayno}.${i}" nice -n 5 examples/run-mozshot &
   i=$((i+1))
 done
