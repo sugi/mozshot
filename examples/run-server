@@ -3,7 +3,7 @@
 displayno=51
 num_server=4
 
-ulimit -c unlimited
+#ulimit -c unlimited
 ulimit -v 512000
 unset XAUTHORITY
 
