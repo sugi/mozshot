@@ -6,7 +6,7 @@ if ARGV.length < 1
 end
 
 
-DRb.start_service('drbunix:')
+DRb.start_service('druby://localhost:0')
 ts = DRbObject.new_with_uri(ARGV[0])
 
 r = nil
