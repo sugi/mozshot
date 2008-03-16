@@ -98,6 +98,7 @@ class MozShotCGI
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
       :cache_expire  => 12 * 60 * 60,
+      :cache_expire  => 24 * 60 * 60 * 3.5,
       :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
@@ -108,15 +109,17 @@ class MozShotCGI
     @cgi = nil
     @req = nil
     @ts  = nil
-    @cache_name = nil
-    @cache_path = nil
-    @cache_file = nil
-    @cache_base = nil
-    @break_len  = 4
+    @cache_name   = nil
+    @cache_path   = nil
+    @cache_file   = nil
+    @cache_prefix = nil
+    @cache_depth  = 2
+    @cache_path_legacy = nil
   end
   attr_writer :cgi, :ts, :req,
-    :cache_name, :cache_base, :cache_file, :cache_path
-  attr_accessor :opt, :break_len
+    :cache_name, :cache_prefix, :cache_file, :cache_path
+  attr_accessor :opt
+  attr_reader :cache_depth
 
   def ts
     @ts and return @ts
@@ -145,19 +148,31 @@ class MozShotCGI
         "-#{req.uri.length}.png"
   end
 
-  def cache_base
-    @cache_base and return @cache_base
-    @cache_base  = "#{opt[:cache_dir]}/#{cache_name[0, break_len]}"
+  def cache_depth=(v)
+    @cache_prefix = nil
+    @cache_file   = nil
+    @cache_path   = nil
+    @cache_depth  = v
+  end
+
+  def cache_prefix
+    @cache_prefix and return @cache_prefix
+    @cache_prefix  = (1..cache_depth).map{|i| cache_name[0, i*2]}.join('/')
   end
 
   def cache_file
     @cache_file and return @cache_file
-    @cache_file  = "#{cache_name[0, break_len]}/#{cache_name}"
+    @cache_file  = "#{cache_prefix}/#{cache_name}"
   end
 
   def cache_path
     @cache_path and return @cache_path
     @cache_path  = "#{opt[:cache_dir]}/#{cache_file}"
+  end
+
+  def cache_path_legacy
+    @cache_path_legacy and return @cache_path_legacy
+    @cache_path_legacy = "#{opt[:cache_dir]}/#{cache_name[0, 4]}/#{cache_name}"
   end
 
   def run
@@ -234,6 +249,22 @@ class MozShotCGI
     cache_queue = cache_path + ".queued"
     cache_tmp   = cache_path + ".tmp"
 
+    if File.file? cache_path_legacy
+      cache_prefix.split('/').size.times { |i|
+        dir = opt[:cache_dir] + '/' + cache_prefix.split('/')[0, i+1].join('/')
+        begin
+          File.directory? dir or Dir.mkdir(dir)
+        rescue Errno::EEXIST
+          # ignore
+        end
+      }
+      begin
+        File.rename cache_path_legacy, cache_path
+      rescue Errno::ENOENT
+        # ignore
+      end
+    end
+
     run_other_queue = false
     begin
       if File.mtime(cache_queue).to_i + req.opt[:timeout]*(req.opt[:retry].to_i+1) > Time.now.to_i
@@ -266,11 +297,14 @@ class MozShotCGI
       # ignore
     end
 
-    begin
-      File.directory? cache_base or Dir.mkdir(cache_base)
-    rescue Errno::EEXIST
-      # ignore
-    end
+    cache_prefix.split('/').size.times { |i|
+      dir = opt[:cache_dir] + '/' + cache_prefix.split('/')[0, i+1].join('/')
+      begin
+        File.directory? dir or Dir.mkdir(dir)
+      rescue Errno::EEXIST
+        # ignore
+      end
+    }
 
     begin
       metadata = {
@@ -278,6 +312,7 @@ class MozShotCGI
         'Timestamp'   => Time.now.to_i
       }
       begin
+        #raise Rinda::RequestExpiredError
         img = add_metadata(get_image, metadata)
         open(cache_tmp, "w") { |t|
           t << img
