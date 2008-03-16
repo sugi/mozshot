@@ -514,6 +514,4 @@ if __FILE__ == $0
   MozShotCGI.new.run
 end
 
-# vim: set sts=2:
-# vim: set expandtab:
-# vim: set shiftwidth=2:
+# vim: set sts=2 sw=2 expandtab filetype=ruby:
