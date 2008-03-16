@@ -7,8 +7,17 @@ require 'pp'
 require 'digest/md5'
 load 'shot.cgi'
 
-DRb.start_service('drbunix:')
-ts = DRbObject.new_with_uri(ARGV[0])
+
+config = {:drburi => "druby://:7524"}
+begin
+  userconf = YAML.load(open("../config/config.yml"){|f| f.read})
+  userconf && userconf.has_key?(:webclient) and config.merge! userconf[:webclient]
+rescue Errno::ENOENT
+  # ignore
+end
+
+DRb.start_service('druby://localhost:0')
+ts = DRbObject.new_with_uri(config[:drburi])
 
 write_count = 0
 r = ts.read_all([:ret, nil, nil, nil])

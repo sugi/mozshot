@@ -1,0 +1,5 @@
+:tuplespace:
+  :drburi: druby://0:7524
+
+:webclient:
+  :drburi: druby://:7524

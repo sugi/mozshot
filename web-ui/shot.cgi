@@ -12,6 +12,7 @@ require 'digest/md5'
 require 'timeout'
 require 'pstore'
 require 'RMagick'
+require 'yaml'
 
 class MozShotCGI
   class Request
@@ -98,7 +99,6 @@ class MozShotCGI
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
       :cache_expire  => 12 * 60 * 60,
-      :cache_expire  => 24 * 60 * 60 * 3.5,
       :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
@@ -511,7 +511,14 @@ class MozShotCGI
 end
 
 if __FILE__ == $0
-  MozShotCGI.new.run
+  config = {}
+  begin
+    userconf = YAML.load(open("../config/config.yml"){|f| f.read})
+    userconf && userconf.has_key?(:webclient) and config.merge! userconf[:webclient]
+  rescue Errno::ENOENT
+    # ignore
+  end
+  MozShotCGI.new(config).run
 end
 
 # vim: set sts=2 sw=2 expandtab filetype=ruby:
