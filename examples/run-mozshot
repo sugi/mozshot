@@ -23,7 +23,7 @@ unset GPG_AGENT_INFO
 unset GTK_IM_MODULE
 unset XMODIFIERS
 
-ulimit -c unlimited
+#ulimit -c unlimited
 ulimit -v 512000
 
 if test -z "$1"; then
