@@ -3,3 +3,4 @@
  * Dead lock with 
    "GLib-WARNING **:g_main_context_prepare(): main loop already active in another thread"
    http://ruby-gnome2.sourceforge.jp/ja/sfmltoj.cgi?key=/mailarchive/forum.php%3Fthread_id%3D19515174%26forum_id%3D9432
+   ... resolved?
