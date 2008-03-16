@@ -8,8 +8,8 @@ elif [ "$DISPLAY" = ":0.0" ]; then
   exit 1
 fi
 
-TEMP=/tmp/mozshot
-TMP=/tmp/mozshot
+: ${TEMP:=/tmp/mozshot}
+: ${TMP:=/tmp/mozshot}
 : ${MOZSHOT_DAEMON_SOCK:=druby://:7524}
 : ${MOZILLA_FIVE_HOME=/usr/lib/xulrunner}
 export MOZILLA_FIVE_HOME MOZSHOT_DAEMON_SOCK TEMP TMP
