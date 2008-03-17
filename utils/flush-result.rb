@@ -28,7 +28,7 @@ r.each {|i|
   rescue Rinda::RequestExpiredError
     next
   end
-  shot = MozShotCGI.new
+  shot = MozShotCGI.new(config)
   ret = cur[3] or next
   shot.cache_name = ret[:req][:cache_name]
   metadata = {
