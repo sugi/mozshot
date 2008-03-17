@@ -5,12 +5,12 @@ require 'rinda/rinda'
 require 'pstore'
 require 'pp'
 require 'digest/md5'
-load 'shot.cgi'
+load "#{File.dirname(__FILE__)}/../web-ui/shot.cgi"
 
 
 config = {:drburi => "druby://:7524"}
 begin
-  userconf = YAML.load(open("../config/config.yml"){|f| f.read})
+  userconf = YAML.load(open("#{File.dirname(__FILE__)}/../config/config.yml"){|f| f.read})
   userconf && userconf.has_key?(:webclient) and config.merge! userconf[:webclient]
 rescue Errno::ENOENT
   # ignore

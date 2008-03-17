@@ -513,7 +513,7 @@ end
 if __FILE__ == $0
   config = {}
   begin
-    userconf = YAML.load(open("../config/config.yml"){|f| f.read})
+    userconf = YAML.load(open("../conf/config.yml"){|f| f.read})
     userconf && userconf.has_key?(:webclient) and config.merge! userconf[:webclient]
   rescue Errno::ENOENT
     # ignore
