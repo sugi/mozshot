@@ -16,6 +16,7 @@
 
 require 'cgi'
 require 'fcgi'
+require 'singleton'
 
 # for ruby 1.8 blow
 if RUBY_VERSION.tr(".", "0").to_i < 10801
@@ -29,33 +30,49 @@ if RUBY_VERSION.tr(".", "0").to_i < 10801
 end
 
 class FCGIWrap
-  VERSION = "0.1.5"
-  @@cgi = nil
-  @@shutdown = false
+  include Singleton
+
+  VERSION = "0.1.6"
+
+  def initialize
+    cgi = nil
+    shutdown_p = false
+  end
+  attr_accessor :cgi, :shutdown_p
+
   class << self
     def cgi
-      @@cgi
+      FCGIWrap.instance.cgi
+    end
+
+    def shutdown?
+      FCGIWrap.instance.shutdown_p
+    end
+
+    def shutdown=(f)
+      FCGIWrap.instance.shutdown_p = f
     end
 
     def each_request
       trap(:PIPE){ exit } 
-      trap(:TERM){ @@cgi ? (@@shutdown = true) : exit } 
-      trap(:INT){ @@cgi ? (@@shutdown = true) : exit } 
-      FCGI.each_cgi { |@@cgi|
+      trap(:TERM){ self.cgi ? (shutdown = true) : exit } 
+      trap(:INT){ self.cgi ? (shutdown = true) : exit } 
+      FCGI.each_cgi { |cgi|
+        FCGIWrap.instance.cgi = cgi
 	ENV.clear
-	ENV.update(@@cgi.env_table)
+	ENV.update(self.cgi.env_table)
         begin
           yield
 	rescue SystemExit
-	  @@shutdown && raise
+	  shutdown? && raise
         ensure
-          @@cgi = nil
+          FCGIWrap.instance.cgi = nil
           #Thread.list.each { |t|
           #  Thread.current == t and next
           #  t.kill
           #}
         end
-	@@shutdown && exit
+	shutdown? && exit
       }
     end
     alias each each_request
@@ -86,3 +103,4 @@ class CGI
   end
 end
 
+# vim: set sts=2 sw=2 expandtab:
