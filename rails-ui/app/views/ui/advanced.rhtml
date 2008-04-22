@@ -8,7 +8,7 @@
   }
 ' %>
 
-<%= start_form_tag({:action => 'advanced'}, {:class => 'advancedui'}) %>
+<%= form_tag({:action => 'advanced'}, {:class => 'advancedui'}) %>
 <%= text_field 'param', 'uri', :size => 80, :value => params[:param] && params[:param][:uri] %>
 
 Window Size:
@@ -58,7 +58,7 @@ x
 <%= submit_tag "Take ScreenShot", :id => "submit", :name => nil %>
 <div id='form-end'>
 </div>
-<%= end_form_tag %>
+</form>
 
 <% if @uri %>
 <h3>Image URL</h3>
@@ -67,7 +67,7 @@ x
 <% end %>
 
 <div class="reqimages">
-  <%= @uri and link_to "<img src='#{@image_uri};bg=false' alt=''>", @uri %>
+  <%= @uri and link_to "<img src='#{@image_uri}' alt=''>", @uri %>
 </div>
 
 <%= javascript_tag 'toggle_imgsize();' %>
