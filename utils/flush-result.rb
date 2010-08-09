@@ -31,6 +31,8 @@ r.each {|i|
   shot = MozShotCGI.new(config)
   ret = cur[3] or next
   shot.cache_name = ret[:req][:cache_name]
+  badfile = shot.cache_path+".badmark"
+  delete_badfile_p = false
   metadata = {
       'Timestamp'   => ret[:timestamp].to_i,
       'OriginalURI' => ret[:req][:uri]
@@ -43,7 +45,6 @@ r.each {|i|
       puts "snapshot file already exists, ignore."
       next
     else
-      badfile = shot.cache_path+".badmark"
       i = 0
       open(badfile, "a+") { |b|
 	i = b.read.to_i + 1
@@ -52,7 +53,7 @@ r.each {|i|
       }
       puts "set bad count = #{i}"
       i < 3 and next
-      File.delete badfile
+      delete_badfile_p = true
       puts "bad cound limit exceeded. writing force: #{ret[:req][:uri]}"
     end
   end
@@ -73,6 +74,7 @@ r.each {|i|
       # ignore
     end
     write_count += 1
+    delete_badfile_p and File.delete(badfile)
   end
 }
 puts "complete: wrote out #{write_count} images."
