@@ -4,7 +4,7 @@
 pid=`< /home/sugi/www/mozshot/ts.pid`
 restart=false
 
-if ! timeout 2 ruby ~/www/mozshot/utils/ping-ts.rb druby://:7524; then
+if ! timeout -k 1 2 ruby ~/www/mozshot/utils/ping-ts.rb druby://:7524; then
   echo "ts.rb not respond ping, restarting..."
   restart=true
 fi
@@ -28,3 +28,5 @@ if [ "$restart" = "true" ]; then
   sleep 1
   kill -KILL $pid > /dev/null 2>&1
 fi
+
+exit 0
