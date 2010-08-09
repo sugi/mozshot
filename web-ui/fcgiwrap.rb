@@ -91,7 +91,7 @@ module Kernel
     end
   end
   def puts(*args)
-    Kernel.print(*args.map{|s| t = s.dup.to_s; t !~ /\n$/ and t += "\n"; t })
+    FCGIWrap.cgi.print(*args.map{|s| t = s.dup.to_s; t !~ /\n$/ and t += "\n"; t })
   end
 end
 
