@@ -98,7 +98,7 @@ class MozShotCGI
       :drburi        => "druby://:7524",
       :cache_dir     => "cache",
       :cache_baseurl => "/cache", # must start with /
-      :cache_expire  => 12 * 60 * 60,
+      :cache_expire  => 7 * 24 * 60 * 60,
       :force_nocache => false,
       :internal_redirect  => true,
       :shot_background    => false,
@@ -247,7 +247,7 @@ class MozShotCGI
 
   def prepare_cache_file
     cache_queue = cache_path + ".queued"
-    cache_tmp   = cache_path + ".tmp"
+    cache_tmp   = cache_path + ".tmp.#{$$}"
 
     if File.file? cache_path_legacy
       cache_prefix.split('/').size.times { |i|
