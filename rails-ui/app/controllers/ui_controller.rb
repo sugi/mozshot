@@ -7,7 +7,7 @@ class UiController < ApplicationController
       when "ja"
         File.open("hatena-bookmarks.html"){|f| @demo = f.read }
       else
-        File.open("delicious-bookmarks.html"){|f| @demo = f.read }
+        File.open("digg-bookmarks.html"){|f| @demo = f.read }
       end
     rescue # All mainly Errno::EPERM, Errno::ENOENT
       # ignore
